@@ -276,28 +276,41 @@ function logout(){location.reload()}
 
 /* PUBLISH */
 function publish(){
-if(!currentUser || currentUser.u!=='admin') return;
-let file=imageUpload.files[0];
-if(file){
-let reader=new FileReader();
-reader.onload=function(){addPost(reader.result);}
-reader.readAsDataURL(file);
-}else addPost("");
+if(currentUser!=='admin') return;
+
+let file = document.getElementById("imageUpload").files[0];
+
+function savePost(imgData){
+posts.unshift({
+id: Date.now(),
+title: document.getElementById("title").value,
+content: document.getElementById("content").value,
+category: document.getElementById("category").value,
+image: imgData || "",
+likes: 0,
+likedBy: [],
+comments: []
+});
+
+localStorage.setItem("posts", JSON.stringify(posts));
+
+// CLEAR INPUTS
+document.getElementById("title").value = "";
+document.getElementById("content").value = "";
+document.getElementById("imageUpload").value = "";
+
+render();
 }
 
-function addPost(img){
-posts.unshift({
-id:Date.now(),
-title:title.value,
-content:content.value,
-category:category.value,
-image:img,
-likes:0,
-likedBy:[],   // ✅ FIXED
-comments:[]
-});
-localStorage.setItem("posts",JSON.stringify(posts));
-render();
+if(file){
+let reader = new FileReader();
+reader.onload = function(e){
+savePost(e.target.result);
+};
+reader.readAsDataURL(file);
+}else{
+savePost("");
+}
 }
 
 /* LIKE ONLY ONCE */
