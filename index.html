@@ -356,8 +356,7 @@ render();
 
 /* DELETE (ADMIN ONLY) */
 function deletePost(id){
-if(!currentUser || currentUser.u !== 'admin') return;   // ✅ FIXED
-
+if(currentUser!=='admin') return;
 posts = posts.filter(p => p.id !== id);
 localStorage.setItem("posts", JSON.stringify(posts));
 render();
@@ -427,9 +426,12 @@ ${p.image?`<img src="${p.image}">`:''}
 <div class="actions">
 <button onclick="like(${p.id})">❤️ ${p.likes}</button>
 
-${currentUser && currentUser.u === 'admin'
-? `<button onclick="deletePost(${p.id})">🗑️ Delete</button>`   // ✅ FIXED
-: ''}
+${currentUser === 'admin' ? `
+
+<button onclick="deletePost(${p.id})">🗑️</button>
+` : ''}
+
+
 
 <button onclick="copyLink(${p.id})">🔗 Copy</button>
 <button onclick="shareWhatsApp(${p.id})">📱 WhatsApp</button>
