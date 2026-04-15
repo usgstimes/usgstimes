@@ -162,6 +162,7 @@ Stay updated with the latest stories, events, and achievements from our school c
 <button class="big-btn" onclick="setView('houses')">🏡 Houses</button>
 <button class="big-btn" onclick="setView('leaderboard')">🏆 Leaderboard</button>
 <button id="publishTab" class="big-btn hidden" onclick="setView('publish')">✏️ Publish</button>
+<button class="big-btn" onclick="showContact()">📞 Contact Us</button>
 </div>
 
 <div class="section hidden" id="housesSection">
@@ -169,24 +170,41 @@ Stay updated with the latest stories, events, and achievements from our school c
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin-top:20px;">
 
-<div class="house-box" style="background:red;color:white">
-<h3>Roses</h3>
-<p>Roses stand out. So does this house. It’s dark red shows its toughness whether it’s in academics or sports. They have it all. At the end of the day they defending champs of this school. Like a rose it’s always blooming except this house never dies.</p>
-</div>
 
 <div class="house-box" style="background:blue;color:white">
 <h3>Bluebells</h3>
-<p>When we talk about flowers the ones that come to mind are lilies and roses. But deep down bluebells beat them all. They are underdogs. Calmness is their strength and chaos is their moment. If there was a house for the most hardworking it would be bluebells.</p>
+<p>
+When we talk about flowers the ones that come to mind are lilies and roses. But deep down bluebells beat them all. They are underdogs. Calmness is their strength and chaos is their moment. If there was a house for the most hardworking it would be bluebells.
+<br><br>
+<i>Full effort is full victory</i>
+</p>
 </div>
 
 <div class="house-box" style="background:gold;color:white">
 <h3>Daffodils</h3>
-<p>The reason they’re yellow is because they bleed gold. The most sport cups belongs to daffodils, because if their determination, hardwork and immense talent. Daffodilites are either scholers, athlete’s and sometimes both. The crown belongs to them.</p>
+<p>
+The reason they’re yellow is because they bleed gold. The most sport cups belongs to daffodils, because if their determination, hardwork and immense talent. Daffodilites are either scholers, athlete’s and sometimes both. The crown belongs to them.
+<br><br>
+<i>Do your part</i>
+</p>
+</div>
+
+<div class="house-box" style="background:red;color:white">
+<h3>Roses</h3>
+<p>
+Roses stand out. So does this house. It’s dark red shows its toughness whether it’s in academics or sports. They have it all. At the end of the day they defending champs of this school. Like a rose it’s always blooming except this house never dies.
+<br><br>
+<i>Excellence through endeavour</i>
+</p>
 </div>
 
 <div class="house-box" style="background:green;color:white">
 <h3>Shamrocks</h3>
-<p>Shamrocks the is the house where talent is key. Masters at things like extracurricular as well as academics. Not just few. Most of them. Their green colour indicates their ability to thrive and stay alive despite the challenges thrown at them. A mix of calmness and aggression is deadly in this house.</p>
+<p>
+Shamrocks the is the house where talent is key. Masters at things like extracurricular as well as academics. Not just few. Most of them. Their green colour indicates their ability to thrive and stay alive despite the challenges thrown at them. A mix of calmness and aggression is deadly in this house.
+<br><br>
+<i>Never give in</i>
+</p>
 </div>
 
 </div>
@@ -326,6 +344,10 @@ if(!currentUser || currentUser.u !== 'admin') return;   // ✅ FIXED
 posts = posts.filter(p => p.id !== id);
 localStorage.setItem("posts", JSON.stringify(posts));
 render();
+}
+
+function showContact(){
+alert("Contact us at: studentvoiceinusgs@gmail.com");
 }
 
 /* SHARE */
