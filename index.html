@@ -82,6 +82,38 @@ background:linear-gradient(135deg,#3d4f87,#5a6be0);
 .hidden{display:none}
 .house-box{padding:20px;margin:10px;border-radius:10px;color:white;font-weight:bold}
 textarea{width:300px;height:100px}
+@media(max-width:768px){
+
+.hero{
+flex-direction:column;
+text-align:center;
+padding:40px 5%;
+}
+
+.hero img{
+width:90%;
+margin-top:20px;
+}
+
+.nav{
+flex-direction:column;
+gap:10px;
+}
+
+.posts{
+grid-template-columns:1fr;
+}
+
+.big-btn{
+width:90%;
+font-size:14px;
+}
+
+input, textarea{
+width:90%;
+}
+
+}
 </style>
 </head>
 <body>
