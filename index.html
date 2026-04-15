@@ -257,20 +257,19 @@ function setView(v){currentView=v;render();}
 
 /* AUTH */
 function signup(){
-if(users.find(x=>x.u===user.value)) return alert("User exists");
-users.push({u:user.value,p:pass.value,likes:[]});
-localStorage.setItem("users",JSON.stringify(users));
-alert("Account created");
+alert("Signup disabled. Use admin login.");
 }
-
 function login(){
-let u=users.find(x=>x.u===user.value&&x.p===pass.value);
-if(u){
-currentUser=u;
-authArea.innerHTML=`${currentUser.u} <button onclick="logout()">Sign Out</button>`;
-if(currentUser.u==='admin') publishTab.classList.remove('hidden');
+if(user.value === "admin" && pass.value === "hii"){
+currentUser = "admin";
+
+authArea.innerHTML = `admin <button onclick="logout()">Sign Out</button>`;
+publishTab.classList.remove('hidden');
+
 render();
-}else alert("Wrong login");
+}else{
+alert("Wrong login");
+}
 }
 
 function logout(){location.reload()}
@@ -328,12 +327,17 @@ render();
 
 /* COMMENTS */
 function commentPost(id){
-let text=document.getElementById("cmt-"+id).value;
+let text = document.getElementById("cmt-"+id).value;
+let nameInput = document.getElementById("name-"+id).value;
+
 if(!text) return;
-let p=posts.find(x=>x.id===id);
-let name=currentUser?currentUser.u:"Anonymous";
-p.comments.push(name+": "+text);
-localStorage.setItem("posts",JSON.stringify(posts));
+
+let name = nameInput ? nameInput : (currentUser ? currentUser : "Anonymous");
+
+let p = posts.find(x=>x.id===id);
+p.comments.push(name + ": " + text);
+
+localStorage.setItem("posts", JSON.stringify(posts));
 render();
 }
 
@@ -419,6 +423,7 @@ ${currentUser && currentUser.u === 'admin'
 <button onclick="shareInstagram()">📸 Instagram</button>
 </div>
 
+<input id="name-${p.id}" placeholder="Your name">
 <input id="cmt-${p.id}" placeholder="Comment">
 <button onclick="commentPost(${p.id})">Post</button>
 <div>${(p.comments||[]).map(x=>"<div>"+x+"</div>").join("")}</div>
