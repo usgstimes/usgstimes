@@ -76,7 +76,14 @@ background:linear-gradient(135deg,#3d4f87,#5a6be0);
 }
 .posts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
 .card{background:#fff;border-radius:12px;padding:15px}
-.card img{width:100%;border-radius:10px;margin-bottom:10px}
+.card img{
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    background: #f0f0f0;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
 .actions button{padding:8px;border:none;border-radius:6px;margin:3px}
 .badge{background:red;color:white;padding:3px 8px;border-radius:6px;font-size:12px;margin-left:6px}
 .hidden{display:none}
@@ -114,6 +121,43 @@ width:90%;
 }
 
 }
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    min-width: 200px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.dropdown-content button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: white;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dropdown-content button:hover {
+    background: #f0f0f0;
+}
+
+/* ✅ SHOW ON HOVER */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
 </style>
 </head>
 <body>
@@ -132,12 +176,7 @@ width:90%;
 
 <div class="nav">
 <h2>USGS Times</h2>
-<div id="authArea">
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
-<button onclick="signup()">Sign Up</button>
-<button onclick="login()">Login</button>
-</div>
+
 </div>
 
 <div class="hero">
@@ -155,16 +194,29 @@ Stay updated with the latest stories, events, and achievements from our school c
 <div class="section">
 <input id="search" placeholder="Search..." oninput="render()"><br><br>
 <button class="big-btn" onclick="setView('all')">🏠 All</button>
-<button class="big-btn" onclick="setView('sports')">⚽ Sports</button>
 <button class="big-btn" onclick="setView('events')">🎉 Events</button>
-<button class="big-btn" onclick="setView('academics')">📚 Academics</button>
+<div class="dropdown">
+    <button class="big-btn">🌌 Boundless Imagination</button>
+
+    <div class="dropdown-content">
+        <button onclick="setView('reviews')">📝 Reviews</button>
+        <button onclick="setView('story')">📖 Story</button>
+        <button onclick="setView('poetry')">🌸 Poetry</button>
+    </div>
+</div>
+
+<button class="big-btn" onclick="setView('random')">🎲 Random Writes</button>
 <button class="big-btn" onclick="setView('likes')">❤️ Likes</button>
 <button class="big-btn" onclick="setView('houses')">🏡 Houses</button>
 <button class="big-btn" onclick="setView('leaderboard')">🏆 Leaderboard</button>
 <button id="publishTab" class="big-btn hidden" onclick="setView('publish')">✏️ Publish</button>
 <button class="big-btn" onclick="showContact()">📞 Contact Us</button>
 </div>
-
+<div id="boundlessMenu" class="hidden" style="margin-top:10px;">
+    <button class="big-btn" onclick="setView('reviews')">📝 Reviews</button>
+    <button class="big-btn" onclick="setView('story')">📖 Story</button>
+    <button class="big-btn" onclick="setView('poetry')">🌸 Poetry</button>
+</div>
 <div class="section hidden" id="housesSection">
 <h2>School Houses</h2>
 
@@ -218,18 +270,21 @@ Shamrocks the is the house where talent is key. Masters at things like extracurr
 <div class="section" id="postsSection">
 <div class="posts" id="postsContainer"></div>
 </div>
-
+<div class="section hidden" id="authArea">
+    <input id="user" placeholder="Username">
+    <input id="pass" type="password" placeholder="Password">
+    <button onclick="signup()">Sign Up</button>
+    <button onclick="login()">Login</button>
+</div>
 <div class="section hidden" id="adminPanel">
 <h2>Publish Post</h2>
 <input id="title" placeholder="Title"><br><br>
 <select id="category">
-<option>sports</option>
 <option>events</option>
-<option>academics</option>
-<option>bluebells</option>
-<option>daffodils</option>
-<option>roses</option>
-<option>shamrocks</option>
+<option>reviews</option>
+<option>story</option>
+<option>poetry</option>
+<option>random</option>
 </select><br><br>
 <textarea id="content" placeholder="Content"></textarea><br><br>
 <input type="file" id="imageUpload"><br><br>
@@ -239,6 +294,11 @@ Shamrocks the is the house where talent is key. Masters at things like extracurr
 </div>
 
 <script>
+let authArea = document.getElementById("authArea");
+function toggleBoundless(){
+    let menu = document.getElementById("boundlessMenu");
+    menu.classList.toggle("hidden");
+}
 function enterSite(){
 document.getElementById("coverPage").style.display="none";
 document.getElementById("mainSite").classList.remove("hidden");
@@ -363,7 +423,9 @@ render();
 }
 
 function showContact(){
-alert("Contact us at: studentvoiceinusgs@gmail.com");
+alert(`Contact us at: studentvoiceinusgs@gmail.com
+
+Reach out to the student body of the school through this email regarding any problems, feedbacks and suggestions. This is open to all.`);
 }
 
 /* SHARE */
@@ -383,64 +445,93 @@ window.open("https://instagram.com");
 
 /* RENDER */
 function render(){
-postsContainer.innerHTML="";
-housesSection.classList.add('hidden');
-leaderboardSection.classList.add('hidden');
-adminPanel.classList.add('hidden');
-postsSection.classList.remove('hidden');
 
-if(currentView==='houses'){housesSection.classList.remove('hidden');postsSection.classList.add('hidden');return;}
+	postsContainer.innerHTML = "";
+	let authArea = document.getElementById("authArea");
 
-if(currentView==='leaderboard'){
-leaderboardSection.classList.remove('hidden');
-postsSection.classList.add('hidden');
-leaderboard.innerHTML=
-`<div class='house-box' style='background:blue'>Bluebells: ${housePoints.bluebells}</div>
-<div class='house-box' style='background:gold;color:black'>Daffodils: ${housePoints.daffodils}</div>
-<div class='house-box' style='background:red'>Roses: ${housePoints.roses}</div>
-<div class='house-box' style='background:green'>Shamrocks: ${housePoints.shamrocks}</div>`;
-return;
-}
+	if(currentView === "all"){
+    authArea.classList.remove("hidden");
+	} else {
+    authArea.classList.add("hidden");
+	}
 
-if(currentView==='publish'){adminPanel.classList.remove('hidden');return;}
+    housesSection.classList.add('hidden');
+    leaderboardSection.classList.add('hidden');
+    adminPanel.classList.add('hidden');
+    postsSection.classList.remove('hidden');
 
-let filtered = posts;
-let top5 = [];
+    let filtered = [...posts];
 
-if(currentView==='all'){
-let sorted = [...filtered].sort((a,b)=>b.likes-a.likes);
-top5 = sorted.slice(0,5);
-let rest = sorted.slice(5);
-filtered = [...top5, ...rest];
-}
+    // ✅ CATEGORY FILTERING (IMPORTANT FIX)
+    if(currentView === 'events') filtered = posts.filter(p => p.category === 'events');
+    if(currentView === 'reviews') filtered = posts.filter(p => p.category === 'reviews');
+    if(currentView === 'story') filtered = posts.filter(p => p.category === 'story');
+    if(currentView === 'poetry') filtered = posts.filter(p => p.category === 'poetry');
+    if(currentView === 'random') filtered = posts.filter(p => p.category === 'random');
 
-filtered.forEach(p=>{
-let trendingBadge = top5.includes(p) ? '<span class="badge">🔥 Trending</span>' : '';
+    if(currentView === 'likes') {
+        filtered = posts.filter(p => p.likes >= 5);
+    }
 
-postsContainer.innerHTML +=
-`<div class="card" id="post-${p.id}">
-${p.image?`<img src="${p.image}">`:''}
-<h3>${p.title} ${trendingBadge}</h3>
-<p>${p.content}</p>
+    if(currentView === 'houses'){
+        housesSection.classList.remove('hidden');
+        postsSection.classList.add('hidden');
+        return;
+    }
 
-<div class="actions">
-<button onclick="like(${p.id})">❤️ ${p.likes}</button>
+    if(currentView === 'leaderboard'){
+        leaderboardSection.classList.remove('hidden');
+        postsSection.classList.add('hidden');
 
-${currentUser === 'admin' ? `
-<button onclick="deletePost(${p.id})">🗑️</button>
-` : ''}
+        leaderboard.innerHTML =
+        `<div class='house-box' style='background:blue'>Bluebells: ${housePoints.bluebells}</div>
+        <div class='house-box' style='background:gold;color:black'>Daffodils: ${housePoints.daffodils}</div>
+        <div class='house-box' style='background:red'>Roses: ${housePoints.roses}</div>
+        <div class='house-box' style='background:green'>Shamrocks: ${housePoints.shamrocks}</div>`;
+        return;
+    }
 
-<button onclick="copyLink(${p.id})">🔗 Copy</button>
-<button onclick="shareWhatsApp(${p.id})">📱 WhatsApp</button>
-<button onclick="shareInstagram()">📸 Instagram</button>
-</div>
+    if(currentView === 'publish'){
+        adminPanel.classList.remove('hidden');
+        return;
+    }
 
-<input id="name-${p.id}" placeholder="Your name">
-<input id="cmt-${p.id}" placeholder="Comment">
-<button onclick="commentPost(${p.id})">Post</button>
-<div>${(p.comments||[]).map(x=>"<div>"+x+"</div>").join("")}</div>
-</div>`;
-});
+    // Trending logic (only for ALL)
+    let top5 = [];
+    if(currentView === 'all'){
+        let sorted = [...posts].sort((a,b)=>b.likes-a.likes);
+        top5 = sorted.slice(0,5);
+        filtered = sorted;
+    }
+
+    filtered.forEach(p=>{
+        let trendingBadge = top5.includes(p) ? '<span class="badge">🔥 Trending</span>' : '';
+
+        postsContainer.innerHTML += `
+        <div class="card" id="post-${p.id}">
+            ${p.image ? `<img src="${p.image}">` : ''}
+            <h3>${p.title} ${trendingBadge}</h3>
+            <p>${p.content}</p>
+
+            <div class="actions">
+                <button onclick="like(${p.id})">❤️ ${p.likes}</button>
+
+                ${currentUser === 'admin' ? `
+                    <button onclick="deletePost(${p.id})">🗑️</button>
+                ` : ''}
+
+                <button onclick="copyLink(${p.id})">🔗 Copy</button>
+                <button onclick="shareWhatsApp(${p.id})">📱 WhatsApp</button>
+                <button onclick="shareInstagram()">📸 Instagram</button>
+            </div>
+
+            <input id="name-${p.id}" placeholder="Your name">
+            <input id="cmt-${p.id}" placeholder="Comment">
+            <button onclick="commentPost(${p.id})">Post</button>
+
+            <div>${(p.comments||[]).map(x=>"<div>"+x+"</div>").join("")}</div>
+        </div>`;
+    });
 }
 
 render();
