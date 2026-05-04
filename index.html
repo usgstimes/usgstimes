@@ -273,7 +273,6 @@ Shamrocks the is the house where talent is key. Masters at things like extracurr
 <div class="section hidden" id="authArea">
     <input id="user" placeholder="Username">
     <input id="pass" type="password" placeholder="Password">
-    <button onclick="signup()">Sign Up</button>
     <button onclick="login()">Login</button>
 </div>
 <div class="section hidden" id="adminPanel">
@@ -294,6 +293,25 @@ Shamrocks the is the house where talent is key. Masters at things like extracurr
 </div>
 
 <script>
+function updatePoints(house){
+
+if(currentUser !== 'admin') return;
+
+let val;
+
+if(house==='bluebells') val = document.getElementById("bpts").value;
+if(house==='daffodils') val = document.getElementById("dpts").value;
+if(house==='roses') val = document.getElementById("rpts").value;
+if(house==='shamrocks') val = document.getElementById("spts").value;
+
+if(val==="") return;
+
+housePoints[house] = parseInt(val);
+
+localStorage.setItem("housePoints", JSON.stringify(housePoints));
+
+render();
+}
 let authArea = document.getElementById("authArea");
 function toggleBoundless(){
     let menu = document.getElementById("boundlessMenu");
@@ -483,11 +501,31 @@ function render(){
         leaderboardSection.classList.remove('hidden');
         postsSection.classList.add('hidden');
 
-        leaderboard.innerHTML =
-        `<div class='house-box' style='background:blue'>Bluebells: ${housePoints.bluebells}</div>
-        <div class='house-box' style='background:gold;color:black'>Daffodils: ${housePoints.daffodils}</div>
-        <div class='house-box' style='background:red'>Roses: ${housePoints.roses}</div>
-        <div class='house-box' style='background:green'>Shamrocks: ${housePoints.shamrocks}</div>`;
+        leaderboard.innerHTML = `
+<div class='house-box' style='background:blue'>
+Bluebells: ${housePoints.bluebells}
+${currentUser==='admin' ? `<br><input id="bpts" type="number" placeholder="Edit">
+<button onclick="updatePoints('bluebells')">✔</button>` : ''}
+</div>
+
+<div class='house-box' style='background:gold;color:black'>
+Daffodils: ${housePoints.daffodils}
+${currentUser==='admin' ? `<br><input id="dpts" type="number" placeholder="Edit">
+<button onclick="updatePoints('daffodils')">✔</button>` : ''}
+</div>
+
+<div class='house-box' style='background:red'>
+Roses: ${housePoints.roses}
+${currentUser==='admin' ? `<br><input id="rpts" type="number" placeholder="Edit">
+<button onclick="updatePoints('roses')">✔</button>` : ''}
+</div>
+
+<div class='house-box' style='background:green'>
+Shamrocks: ${housePoints.shamrocks}
+${currentUser==='admin' ? `<br><input id="spts" type="number" placeholder="Edit">
+<button onclick="updatePoints('shamrocks')">✔</button>` : ''}
+</div>
+`;
         return;
     }
 
