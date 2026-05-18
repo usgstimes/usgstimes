@@ -157,7 +157,24 @@ width:90%;
 .dropdown:hover .dropdown-content {
     display: block;
 }
+#adminPanel label{
+font-weight:bold;
+font-size:15px;
+}
 
+#adminPanel input,
+#adminPanel textarea,
+#adminPanel select{
+font-size:16px;
+}
+
+#previewBox{
+transition:0.3s;
+}
+
+#previewImage{
+transition:0.3s;
+}
 </style>
 </head>
 <body>
@@ -206,7 +223,7 @@ Stay updated with the latest stories, events, and achievements from our school c
 </div>
 
 <button class="big-btn" onclick="setView('random')">🎲 Random Writes</button>
-<button class="big-btn" onclick="setView('likes')">❤️ Likes</button>
+
 <button class="big-btn" onclick="setView('houses')">🏡 Houses</button>
 <button class="big-btn" onclick="setView('leaderboard')">🏆 Leaderboard</button>
 <button id="publishTab" class="big-btn hidden" onclick="setView('publish')">✏️ Publish</button>
@@ -261,7 +278,39 @@ Shamrocks the is the house where talent is key. Masters at things like extracurr
 
 </div>
 </div>
+<div class="section hidden" id="contactSection">
 
+<h1>📞 Contact Us</h1>
+
+<div style="
+max-width:700px;
+margin:auto;
+background:white;
+padding:40px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+">
+
+<h2>USGS Student Voice</h2>
+
+<p style="font-size:18px;line-height:1.8;">
+Reach out to the student body regarding:
+<br><br>
+
+• Feedback<br>
+• Suggestions<br>
+• Problems<br>
+• Collaborations<br>
+• Event announcements
+</p>
+
+<h3 style="margin-top:30px;">
+📧 studentvoiceinusgs@gmail.com
+</h3>
+
+</div>
+
+</div>
 <div class="section hidden" id="leaderboardSection">
 <h2>House Points Leaderboard</h2>
 <div id="leaderboard"></div>
@@ -276,20 +325,125 @@ Shamrocks the is the house where talent is key. Masters at things like extracurr
     <button onclick="login()">Login</button>
 </div>
 <div class="section hidden" id="adminPanel">
-<h2>Publish Post</h2>
-<input id="title" placeholder="Title"><br><br>
-<select id="category">
+
+<h2 style="font-size:40px;margin-bottom:20px;">✏️ Publish Post</h2>
+
+<div style="
+max-width:900px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+text-align:left;
+">
+
+<label>Post Title</label><br>
+<input id="title" placeholder="Enter title"
+style="width:100%;padding:14px;border-radius:10px;border:1px solid #ccc;margin-top:8px;"><br><br>
+
+<label>Category</label><br>
+<select id="category"
+style="width:100%;padding:14px;border-radius:10px;border:1px solid #ccc;margin-top:8px;">
 <option>events</option>
 <option>reviews</option>
 <option>story</option>
 <option>poetry</option>
 <option>random</option>
 </select><br><br>
-<textarea id="content" placeholder="Content"></textarea><br><br>
-<input type="file" id="imageUpload"><br><br>
-<button onclick="publish()">Publish</button>
+
+<label>Post Content</label><br>
+<textarea id="content"
+placeholder="Write your content..."
+style="
+width:100%;
+height:180px;
+padding:15px;
+border-radius:10px;
+border:1px solid #ccc;
+resize:vertical;
+"></textarea><br><br>
+
+<!-- TEXT EDITOR -->
+<div style="
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+margin-bottom:20px;
+">
+
+<select id="fontFamily" onchange="changeStyle()">
+<option value="Segoe UI">Segoe UI</option>
+<option value="Arial">Arial</option>
+<option value="Georgia">Georgia</option>
+<option value="Courier New">Courier</option>
+</select>
+
+<input type="color" id="fontColor" onchange="changeStyle()">
+
+<select id="fontSize" onchange="changeStyle()">
+<option value="16px">16</option>
+<option value="18px">18</option>
+<option value="22px">22</option>
+<option value="28px">28</option>
+<option value="36px">36</option>
+</select>
+
 </div>
 
+<label>Upload Image or PDF</label><br>
+<input type="file" id="imageUpload" accept="image/*,.pdf"><br><br>
+
+<!-- IMAGE SIZE -->
+<label>Image Preview Size</label><br>
+<input type="range" min="100" max="700" value="300" id="imgSize"
+oninput="resizePreviewImage(this.value)">
+<br><br>
+
+<!-- PREVIEW -->
+<h2>🔍 Live Preview</h2>
+
+<div id="previewBox" style="
+background:#f5f5f5;
+padding:20px;
+border-radius:15px;
+margin-top:20px;
+">
+
+<h2 id="previewTitle">Title Preview</h2>
+
+<p id="previewContent">
+Your content preview appears here...
+</p>
+
+<img id="previewImage"
+style="
+max-width:300px;
+display:none;
+border-radius:10px;
+margin-top:15px;
+">
+
+<div id="previewPDF"
+style="
+display:none;
+margin-top:20px;
+padding:15px;
+background:white;
+border-radius:10px;
+">
+📄 PDF Ready To Upload
+</div>
+
+</div>
+
+<br>
+
+<button onclick="publish()" class="big-btn">
+🚀 Publish Post
+</button>
+
+</div>
 </div>
 
 <script>
@@ -365,6 +519,8 @@ title: document.getElementById("title").value,
 content: document.getElementById("content").value,
 category: document.getElementById("category").value,
 image: imgData || "",
+fileType: file ? file.type : "",
+fileName: file ? file.name : "",
 likes: 0,
 likedBy: [],
 comments: []
@@ -385,7 +541,8 @@ let reader = new FileReader();
 reader.onload = function(e){
 savePost(e.target.result);
 };
-reader.readAsDataURL(file);
+const fileURL = URL.createObjectURL(file);
+savePost(fileURL);
 }else{
 savePost("");
 }
@@ -441,11 +598,24 @@ render();
 }
 
 function showContact(){
-alert(`Contact us at: studentvoiceinusgs@gmail.com
 
-Reach out to the student body of the school through this email regarding any problems, feedbacks and suggestions. This is open to all.`);
+currentView = "contact";
+
+render();
+
 }
+function deleteComment(postId, commentIndex){
 
+if(currentUser !== 'admin') return;
+
+let p = posts.find(x => x.id === postId);
+
+p.comments.splice(commentIndex,1);
+
+localStorage.setItem("posts", JSON.stringify(posts));
+
+render();
+}
 /* SHARE */
 function copyLink(id){
 let link=window.location.href.split('#')[0]+"#post-"+id;
@@ -460,7 +630,75 @@ window.open("https://wa.me/?text="+encodeURIComponent(p.title+" "+link));
 function shareInstagram(){
 window.open("https://instagram.com");
 }
+/* LIVE PREVIEW */
 
+document.getElementById("title").addEventListener("input", function(){
+document.getElementById("previewTitle").innerText =
+this.value || "Title Preview";
+});
+
+document.getElementById("content").addEventListener("input", function(){
+document.getElementById("previewContent").innerText =
+this.value || "Your content preview appears here...";
+});
+
+document.getElementById("imageUpload").addEventListener("change", function(e){
+
+let file = e.target.files[0];
+
+if(!file) return;
+
+if(file.type.includes("image")){
+
+let reader = new FileReader();
+
+reader.onload = function(ev){
+
+document.getElementById("previewImage").src = ev.target.result;
+document.getElementById("previewImage").style.display = "block";
+
+document.getElementById("previewPDF").style.display = "none";
+
+};
+
+reader.readAsDataURL(file);
+
+}
+
+else if(file.type === "application/pdf"){
+
+document.getElementById("previewPDF").style.display = "block";
+document.getElementById("previewImage").style.display = "none";
+
+}
+
+});
+
+/* TEXT STYLING */
+
+function changeStyle(){
+
+let content = document.getElementById("previewContent");
+
+content.style.fontFamily =
+document.getElementById("fontFamily").value;
+
+content.style.color =
+document.getElementById("fontColor").value;
+
+content.style.fontSize =
+document.getElementById("fontSize").value;
+
+}
+
+/* IMAGE RESIZE */
+
+function resizePreviewImage(size){
+
+document.getElementById("previewImage").style.maxWidth =
+size + "px";
+
+}
 /* RENDER */
 function render(){
 
@@ -496,6 +734,21 @@ function render(){
         postsSection.classList.add('hidden');
         return;
     }
+	if(currentView === 'contact'){
+
+document.getElementById("contactSection")
+.classList.remove('hidden');
+
+postsSection.classList.add('hidden');
+
+return;
+
+}else{
+
+document.getElementById("contactSection")
+.classList.add('hidden');
+
+}
 
     if(currentView === 'leaderboard'){
         leaderboardSection.classList.remove('hidden');
@@ -547,7 +800,26 @@ ${currentUser==='admin' ? `<br><input id="spts" type="number" placeholder="Edit"
 
         postsContainer.innerHTML += `
         <div class="card" id="post-${p.id}">
-            ${p.image ? `<img src="${p.image}">` : ''}
+${p.fileType && p.fileType.includes("pdf")
+? `
+<a 
+href="${p.image}" 
+target="_blank"
+style="
+display:inline-block;
+padding:12px 20px;
+background:#4b5d9a;
+color:white;
+border-radius:10px;
+text-decoration:none;
+font-weight:bold;
+margin-bottom:10px;
+">
+📄 Open ${p.fileName || "PDF"}
+</a>
+`
+: (p.image ? `<img src="${p.image}">` : '')
+}
             <h3>${p.title} ${trendingBadge}</h3>
             <p>${p.content}</p>
 
@@ -567,7 +839,23 @@ ${currentUser==='admin' ? `<br><input id="spts" type="number" placeholder="Edit"
             <input id="cmt-${p.id}" placeholder="Comment">
             <button onclick="commentPost(${p.id})">Post</button>
 
-            <div>${(p.comments||[]).map(x=>"<div>"+x+"</div>").join("")}</div>
+            <div>
+${(p.comments || []).map((x,i)=>
+`
+<div style="margin-top:5px;">
+${x}
+
+${currentUser === 'admin' ? `
+<button onclick="deleteComment(${p.id},${i})"
+style="margin-left:8px;border:none;background:red;color:white;border-radius:5px;cursor:pointer;">
+🗑️
+</button>
+` : ''}
+
+</div>
+`
+).join("")}
+</div>
         </div>`;
     });
 }
