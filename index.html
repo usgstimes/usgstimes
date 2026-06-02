@@ -508,27 +508,37 @@ function logout(){location.reload()}
 
 /* PUBLISH */
 function publish(){
-if(currentUser!=='admin') return;
+
+if(currentUser !== 'admin') return;
 
 let file = document.getElementById("imageUpload").files[0];
 
-function savePost(imgData){
+function savePost(fileData){
+
 posts.unshift({
 id: Date.now(),
+
 title: document.getElementById("title").value,
+
 content: document.getElementById("content").value,
+
 category: document.getElementById("category").value,
-image: imgData || "",
+
+image: fileData || "",
+
 fileType: file ? file.type : "",
+
 fileName: file ? file.name : "",
+
 likes: 0,
+
 likedBy: [],
+
 comments: []
 });
 
 localStorage.setItem("posts", JSON.stringify(posts));
 
-// CLEAR INPUTS
 document.getElementById("title").value = "";
 document.getElementById("content").value = "";
 document.getElementById("imageUpload").value = "";
@@ -536,16 +546,27 @@ document.getElementById("imageUpload").value = "";
 render();
 }
 
-if(file){
-let reader = new FileReader();
-reader.onload = function(e){
-savePost(e.target.result);
-};
-const fileURL = URL.createObjectURL(file);
-savePost(fileURL);
-}else{
+/* NO FILE */
+if(!file){
+
 savePost("");
+
+return;
+
 }
+
+/* IMAGE OR PDF */
+let reader = new FileReader();
+
+reader.onload = function(e){
+
+savePost(e.target.result);
+
+};
+
+/* IMPORTANT */
+reader.readAsDataURL(file);
+
 }
 
 /* LIKE ONLY ONCE */
@@ -802,6 +823,17 @@ ${currentUser==='admin' ? `<br><input id="spts" type="number" placeholder="Edit"
         <div class="card" id="post-${p.id}">
 ${p.fileType && p.fileType.includes("pdf")
 ? `
+<iframe 
+src="${p.image}"
+width="100%"
+height="500px"
+style="
+border:none;
+border-radius:10px;
+margin-bottom:10px;
+">
+</iframe>
+
 <a 
 href="${p.image}" 
 target="_blank"
@@ -815,7 +847,7 @@ text-decoration:none;
 font-weight:bold;
 margin-bottom:10px;
 ">
-📄 Open ${p.fileName || "PDF"}
+📄 Open PDF
 </a>
 `
 : (p.image ? `<img src="${p.image}">` : '')
