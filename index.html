@@ -537,21 +537,15 @@ render();
 }
 
 if(file){
-
 let reader = new FileReader();
-
 reader.onload = function(e){
-
 savePost(e.target.result);
-
 };
-
-reader.readAsDataURL(file);
-
+const fileURL = URL.createObjectURL(file);
+savePost(fileURL);
 }else{
-
 savePost("");
-
+}
 }
 
 /* LIKE ONLY ONCE */
