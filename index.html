@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>USGS Times</title>
@@ -466,6 +468,19 @@ border-radius:10px;
 </div>
 
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD608uNQLlhvXdoqzIcQQ01D6tMjNI0I6s",
+  authDomain: "usgs-times.firebaseapp.com",
+  projectId: "usgs-times",
+  storageBucket: "usgs-times.firebasestorage.app",
+  messagingSenderId: "34714674408",
+  appId: "1:34714674408:web:2ebd7c55a9475e618bd55d",
+  measurementId: "G-E50KECJGVS"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
 function updatePoints(house){
 
 if(currentUser !== 'admin') return;
@@ -510,20 +525,49 @@ function setView(v){currentView=v;render();}
 function signup(){
 alert("Signup disabled. Use admin login.");
 }
-function login(){
-if(user.value === "admin" && pass.value === "hii"){
-currentUser = "admin";
+async function login(){
 
-authArea.innerHTML = `admin <button onclick="logout()">Sign Out</button>`;
-publishTab.classList.remove('hidden');
+const userId =
+document.getElementById("user").value.trim();
 
-render();
-}else{
-alert("Wrong login");
+const password =
+document.getElementById("pass").value;
+
+if(userId !== "admin"){
+    alert("Wrong User ID");
+    return;
 }
+
+try{
+
+    await auth.signInWithEmailAndPassword(
+        "admin@usgstimes.com",
+        password
+    );
+
+    currentUser = "admin";
+
+    authArea.innerHTML =
+    `Admin <button onclick="logout()">Logout</button>`;
+
+    publishTab.classList.remove("hidden");
+
+    render();
+
+}catch(error){
+
+    alert("Wrong Password");
+
 }
 
-function logout(){location.reload()}
+}
+async function logout(){
+
+await auth.signOut();
+
+location.reload();
+
+}
 
 /* PUBLISH */
 function publish(){
