@@ -3,6 +3,7 @@
 <head>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>USGS Times</title>
@@ -225,7 +226,7 @@ Stay updated with the latest stories, events, and achievements from our school c
     </div>
 </div>
 
-<button class="big-btn" onclick="setView('random')">🎲 Random Writes</button>
+<button class="big-btn" onclick="setView('Newspaper Archive')">🎲Newspaper Archive</button>
 
 <button class="big-btn" onclick="setView('houses')">🏡 Houses</button>
 <button class="big-btn" onclick="setView('leaderboard')">🏆 Leaderboard</button>
@@ -357,7 +358,7 @@ style="width:100%;padding:14px;border-radius:10px;border:1px solid #ccc;margin-t
 <option>reviews</option>
 <option>story</option>
 <option>poetry</option>
-<option>random</option>
+<option>Newspaper Archive</option>
 </select><br><br>
 
 <label>Post Content</label><br>
@@ -481,7 +482,7 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
+const db = firebase.firestore();
 const auth = firebase.auth();
 function updatePoints(house){
 
@@ -513,7 +514,7 @@ document.getElementById("mainSite").classList.remove("hidden");
 }
 
 let users=JSON.parse(localStorage.getItem("users"))||[];
-let posts=JSON.parse(localStorage.getItem("posts"))||[];
+let posts=[];
 let housePoints=JSON.parse(localStorage.getItem("housePoints"))||{bluebells:0,daffodils:0,roses:0,shamrocks:0};
 let anonLikes=JSON.parse(localStorage.getItem("anonLikes"))||[];
 
@@ -609,7 +610,14 @@ likedBy: [],
 comments: []
 });
 
-localStorage.setItem("posts", JSON.stringify(posts));
+db.collection("posts").add({
+    title: document.getElementById("title").value,
+    content: document.getElementById("content").value,
+    category: document.getElementById("category").value,
+    image: fileUrl,
+    likes:0,
+    comments:[]
+});
 
 document.getElementById("title").value = "";
 document.getElementById("content").value = "";
@@ -618,6 +626,30 @@ document.getElementById("fileUrl").value = "";
 render();
 }
 
+function loadPosts(){
+
+db.collection("posts")
+.orderBy("title")
+.onSnapshot(snapshot=>{
+
+posts=[];
+
+snapshot.forEach(doc=>{
+
+posts.push({
+id:doc.id,
+...doc.data()
+});
+
+});
+
+render();
+
+});
+
+}
+
+loadPosts();
 /* LIKE ONLY ONCE */
 function like(id){
 let p=posts.find(x=>x.id===id);
@@ -798,7 +830,7 @@ function render(){
     if(currentView === 'reviews') filtered = posts.filter(p => p.category === 'reviews');
     if(currentView === 'story') filtered = posts.filter(p => p.category === 'story');
     if(currentView === 'poetry') filtered = posts.filter(p => p.category === 'poetry');
-    if(currentView === 'random') filtered = posts.filter(p => p.category === 'random');
+    if(currentView === 'Newspaper Archive') filtered = posts.filter(p => p.category === 'Newspaper Archive');
 
     if(currentView === 'likes') {
         filtered = posts.filter(p => p.likes >= 5);
@@ -951,7 +983,30 @@ style="margin-left:8px;border:none;background:red;color:white;border-radius:5px;
     });
 }
 
+
+/* LOAD POSTS FROM FIRESTORE */
+
+db.collection("posts").onSnapshot(snapshot=>{
+
+posts=[];
+
+snapshot.forEach(doc=>{
+
+posts.push({
+
+id:doc.id,
+
+...doc.data()
+
+});
+
+});
+
 render();
+
+});
+
+
 </script>
 <div id="imageModal"
 style="
