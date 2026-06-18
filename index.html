@@ -573,24 +573,37 @@ location.reload();
 
 /* PUBLISH */
 function publish(){
-if(currentUser!=='admin') return;
 
-let fileUrl = document.getElementById("fileUrl").value;
+if(currentUser !== 'admin') return;
 
-function savePost(imgData){
+let fileUrl =
+document.getElementById("fileUrl").value.trim();
+
 posts.unshift({
 id: Date.now(),
+
 title: document.getElementById("title").value,
+
 content: document.getElementById("content").value,
+
 category: document.getElementById("category").value,
-fontSize: document.getElementById("fontSize").value,
+
 fontFamily: document.getElementById("fontFamily").value,
+
 fontSize: document.getElementById("fontSize").value,
+
 fontColor: document.getElementById("fontColor").value,
 
-image: fileUrl || "",
-fileType: fileUrl.endsWith(".pdf") ? "application/pdf" : "image",
-fileName: fileUrl.split("/").pop(),
+image: fileUrl,
+
+fileType: fileUrl.toLowerCase().includes(".pdf")
+? "application/pdf"
+: "image",
+
+fileName: fileUrl
+? fileUrl.split("/").pop()
+: "",
+
 likes: 0,
 likedBy: [],
 comments: []
@@ -598,31 +611,11 @@ comments: []
 
 localStorage.setItem("posts", JSON.stringify(posts));
 
-// CLEAR INPUTS
 document.getElementById("title").value = "";
 document.getElementById("content").value = "";
 document.getElementById("fileUrl").value = "";
 
 render();
-}
-
-if(file){
-
-let reader = new FileReader();
-
-reader.onload = function(e){
-
-    savePost(e.target.result);
-
-};
-
-reader.readAsDataURL(file);
-
-}else{
-
-    savePost("");
-
-}
 }
 
 /* LIKE ONLY ONCE */
@@ -719,37 +712,7 @@ document.getElementById("previewContent").innerText =
 this.value || "Your content preview appears here...";
 });
 
-document.getElementById("imageUpload").addEventListener("change", function(e){
 
-let file = e.target.files[0];
-
-if(!file) return;
-
-if(file.type.includes("image")){
-
-let reader = new FileReader();
-
-reader.onload = function(ev){
-
-document.getElementById("previewImage").src = ev.target.result;
-document.getElementById("previewImage").style.display = "block";
-
-document.getElementById("previewPDF").style.display = "none";
-
-};
-
-reader.readAsDataURL(file);
-
-}
-
-else if(file.type === "application/pdf"){
-
-document.getElementById("previewPDF").style.display = "block";
-document.getElementById("previewImage").style.display = "none";
-
-}
-
-});
 
 /* TEXT STYLING */
 
@@ -789,6 +752,28 @@ function closeImage(){
 document.getElementById("imageModal").style.display = "none";
 
 }
+const postsContainer =
+document.getElementById("postsContainer");
+
+const publishTab =
+document.getElementById("publishTab");
+
+const housesSection =
+document.getElementById("housesSection");
+
+const leaderboardSection =
+document.getElementById("leaderboardSection");
+
+const adminPanel =
+document.getElementById("adminPanel");
+
+const postsSection =
+document.getElementById("postsSection");
+
+const leaderboard =
+document.getElementById("leaderboard");
+
+
 /* RENDER */
 function render(){
 
