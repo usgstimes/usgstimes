@@ -111,11 +111,11 @@ gap:10px;
 grid-template-columns:1fr;
 }
 
+@media(max-width:768px){
 .big-btn{
-width:90%;
-font-size:12px;
-padding:12px 14px;
-white-space:nowrap;
+font-size:11px;
+padding:10px 12px;
+}
 }
 input, textarea{
 width:90%;
@@ -381,18 +381,31 @@ margin-bottom:20px;
 <select id="fontFamily" onchange="changeStyle()">
 <option value="Segoe UI">Segoe UI</option>
 <option value="Arial">Arial</option>
+<option value="Verdana">Verdana</option>
+<option value="Tahoma">Tahoma</option>
+<option value="Trebuchet MS">Trebuchet</option>
 <option value="Georgia">Georgia</option>
+<option value="Times New Roman">Times New Roman</option>
+<option value="Garamond">Garamond</option>
 <option value="Courier New">Courier</option>
+<option value="Comic Sans MS">Comic Sans</option>
+<option value="Impact">Impact</option>
 </select>
 
 <input type="color" id="fontColor" onchange="changeStyle()">
 
 <select id="fontSize" onchange="changeStyle()">
+<option value="12px">12</option>
+<option value="14px">14</option>
 <option value="16px">16</option>
 <option value="18px">18</option>
-<option value="22px">22</option>
+<option value="20px">20</option>
+<option value="24px">24</option>
 <option value="28px">28</option>
-<option value="36px">36</option>
+<option value="32px">32</option>
+<option value="40px">40</option>
+<option value="48px">48</option>
+<option value="60px">60</option>
 </select>
 
 </div>
@@ -524,6 +537,11 @@ id: Date.now(),
 title: document.getElementById("title").value,
 content: document.getElementById("content").value,
 category: document.getElementById("category").value,
+fontSize: document.getElementById("fontSize").value,
+fontFamily: document.getElementById("fontFamily").value,
+fontSize: document.getElementById("fontSize").value,
+fontColor: document.getElementById("fontColor").value,
+
 image: imgData || "",
 fileType: file ? file.type : "",
 fileName: file ? file.name : "",
@@ -827,7 +845,17 @@ margin-bottom:10px;
 : (p.image ? `<img src="${p.image}">` : '')
 }
             <h3>${p.title} ${trendingBadge}</h3>
-            <p>${p.content}</p>
+
+<p style="
+font-family:${p.fontFamily || 'Segoe UI'};
+font-size:${p.fontSize || '16px'};
+color:${p.fontColor || '#000'};
+font-weight:${p.bold ? 'bold' : 'normal'};
+font-style:${p.italic ? 'italic' : 'normal'};
+text-decoration:${p.underline ? 'underline' : 'none'};
+">
+${p.content}
+</p>
 
             <div class="actions">
                 <button onclick="like(${p.id})">❤️ ${p.likes}</button>
