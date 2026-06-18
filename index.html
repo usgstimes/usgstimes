@@ -412,8 +412,10 @@ margin-bottom:20px;
 
 </div>
 
-<label>Upload Image or PDF</label><br>
-<input type="file" id="imageUpload" accept="image/*,.pdf"><br><br>
+<label>Image/PDF URL</label><br>
+<input id="fileUrl"
+placeholder="Paste GitHub image or PDF link"
+style="width:100%;padding:14px;border-radius:10px;border:1px solid #ccc;"><br><br>
 
 <!-- IMAGE SIZE -->
 <label>Image Preview Size</label><br>
@@ -573,7 +575,7 @@ location.reload();
 function publish(){
 if(currentUser!=='admin') return;
 
-let file = document.getElementById("imageUpload").files[0];
+let fileUrl = document.getElementById("fileUrl").value;
 
 function savePost(imgData){
 posts.unshift({
@@ -586,9 +588,9 @@ fontFamily: document.getElementById("fontFamily").value,
 fontSize: document.getElementById("fontSize").value,
 fontColor: document.getElementById("fontColor").value,
 
-image: imgData || "",
-fileType: file ? file.type : "",
-fileName: file ? file.name : "",
+image: fileUrl || "",
+fileType: fileUrl.endsWith(".pdf") ? "application/pdf" : "image",
+fileName: fileUrl.split("/").pop(),
 likes: 0,
 likedBy: [],
 comments: []
@@ -599,20 +601,27 @@ localStorage.setItem("posts", JSON.stringify(posts));
 // CLEAR INPUTS
 document.getElementById("title").value = "";
 document.getElementById("content").value = "";
-document.getElementById("imageUpload").value = "";
+document.getElementById("fileUrl").value = "";
 
 render();
 }
 
 if(file){
+
 let reader = new FileReader();
+
 reader.onload = function(e){
-savePost(e.target.result);
+
+    savePost(e.target.result);
+
 };
-const fileURL = URL.createObjectURL(file);
-savePost(fileURL);
+
+reader.readAsDataURL(file);
+
 }else{
-savePost("");
+
+    savePost("");
+
 }
 }
 
@@ -767,6 +776,19 @@ document.getElementById("previewImage").style.maxWidth =
 size + "px";
 
 }
+function openImage(src){
+
+document.getElementById("modalImg").src = src;
+
+document.getElementById("imageModal").style.display = "flex";
+
+}
+
+function closeImage(){
+
+document.getElementById("imageModal").style.display = "none";
+
+}
 /* RENDER */
 function render(){
 
@@ -886,7 +908,13 @@ margin-bottom:10px;
 📄 Open ${p.fileName || "PDF"}
 </a>
 `
-: (p.image ? `<img src="${p.image}">` : '')
+: (p.image ? `
+<img
+src="${p.image}"
+onclick="openImage('${p.image}')"
+style="cursor:pointer;"
+>
+` : '')
 }
             <h3>${p.title} ${trendingBadge}</h3>
 
@@ -940,5 +968,28 @@ style="margin-left:8px;border:none;background:red;color:white;border-radius:5px;
 
 render();
 </script>
+<div id="imageModal"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.9);
+z-index:9999;
+justify-content:center;
+align-items:center;
+"
+onclick="closeImage()">
+
+<img id="modalImg"
+style="
+max-width:95%;
+max-height:95%;
+border-radius:12px;
+">
+
+</div>
 </body>
 </html>
