@@ -223,7 +223,7 @@ Stay updated with the latest stories, events, and achievements from our school c
     </div>
 </div>
 
-<button class="big-btn" onclick="setView('Newspaper Archive')">📰Newspaper Archive</button>
+<button class="big-btn" onclick="setView('Newspaper Archive')">🎲Newspaper Archive</button>
 
 <button class="big-btn" onclick="setView('houses')">🏡 Houses</button>
 <button class="big-btn" onclick="setView('leaderboard')">🏆 Leaderboard</button>
@@ -325,11 +325,8 @@ font-size:18px;
 <div class="section" id="postsSection">
 <div class="posts" id="postsContainer"></div>
 </div>
-<div class="section hidden" id="authArea">
-    <input id="user" placeholder="Username">
-    <input id="pass" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-</div>
+<div class="section hidden" id="authArea"></div>
+
 <div class="section hidden" id="adminPanel">
 
 <h2 style="font-size:40px;margin-bottom:20px;">✏️ Publish Post</h2>
@@ -913,7 +910,13 @@ db.collection("posts")
     snapshot.forEach(doc => posts.push({ id: doc.id, ...doc.data() }));
     render();
   });
-
+auth.onAuthStateChanged(user => {
+  if(user){
+    currentUser = "admin";
+    publishTab.classList.remove("hidden");
+    render();
+  }
+});
 
 </script>
 <div id="imageModal"
