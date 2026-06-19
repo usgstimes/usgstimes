@@ -223,7 +223,7 @@ Stay updated with the latest stories, events, and achievements from our school c
     </div>
 </div>
 
-<button class="big-btn" onclick="setView('Newspaper Archive')">🎲Newspaper Archive</button>
+<button class="big-btn" onclick="setView('Newspaper Archive')">📰Newspaper Archive</button>
 
 <button class="big-btn" onclick="setView('houses')">🏡 Houses</button>
 <button class="big-btn" onclick="setView('leaderboard')">🏆 Leaderboard</button>
@@ -831,21 +831,27 @@ db.collection("leaderboard").doc("points").get().then(doc => {
         <div class="card" id="post-${p.id}">
 ${p.fileType && p.fileType.includes("pdf")
 ? `
+<div style="margin-bottom:10px;">
+<iframe
+src="${p.image}"
+style="width:100%;height:300px;border-radius:10px;border:1px solid #ccc;"
+></iframe>
 <a 
 href="${p.image}" 
 target="_blank"
 style="
 display:inline-block;
-padding:12px 20px;
+margin-top:8px;
+padding:10px 18px;
 background:#4b5d9a;
 color:white;
 border-radius:10px;
 text-decoration:none;
 font-weight:bold;
-margin-bottom:10px;
 ">
-📄 Open ${p.fileName || "PDF"}
+📄 Open Full PDF
 </a>
+</div>
 `
 : (p.image ? `
 <img
