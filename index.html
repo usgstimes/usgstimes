@@ -793,7 +793,7 @@ ${p.fileType && p.fileType.includes("pdf")
 ? `
 <div style="margin-bottom:10px;">
 <iframe
-src="${p.image}"
+src="https://docs.google.com/viewer?url=${encodeURIComponent(p.image)}&embedded=true"
 style="width:100%;height:300px;border-radius:10px;border:1px solid #ccc;"
 ></iframe>
 <a 
