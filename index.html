@@ -481,6 +481,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 function updatePoints(house){
 
@@ -792,10 +793,23 @@ db.collection("leaderboard").doc("points").get().then(doc => {
 ${p.fileType && p.fileType.includes("pdf")
 ? `
 <div style="margin-bottom:10px;">
-<iframe
-src="https://docs.google.com/viewer?url=${encodeURIComponent(p.image)}&embedded=true"
-style="width:100%;height:300px;border-radius:10px;border:1px solid #ccc;"
-></iframe>
+${isMobile ? `
+  <div style="
+    background:#f0f0f0;
+    border-radius:10px;
+    padding:20px;
+    text-align:center;
+    margin-bottom:10px;
+  ">
+    <div style="font-size:50px;">📄</div>
+    <p style="font-weight:bold;margin:5px 0;">${p.fileName || 'Document'}</p>
+  </div>
+` : `
+  <iframe
+    src="${p.image}"
+    style="width:100%;height:300px;border-radius:10px;border:1px solid #ccc;"
+  ></iframe>
+`}
 <a 
 href="${p.image}" 
 target="_blank"
