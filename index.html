@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>USGS Times</title>
@@ -469,6 +466,9 @@ border-radius:10px;
 
 </div>
 </div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -497,11 +497,9 @@ if(house==='shamrocks') val = document.getElementById("spts").value;
 
 if(val==="") return;
 
-housePoints[house] = parseInt(val);
-
-localStorage.setItem("housePoints", JSON.stringify(housePoints));
-
-render();
+db.collection("leaderboard").doc("points").set(
+  { [house]: parseInt(val) }, { merge: true }
+).then(() => alert("✅ Points updated!"));
 }
 let authArea = document.getElementById("authArea");
 function toggleBoundless(){
@@ -580,43 +578,20 @@ if(currentUser !== 'admin') return;
 let fileUrl =
 document.getElementById("fileUrl").value.trim();
 
-posts.unshift({
-id: Date.now(),
-
-title: document.getElementById("title").value,
-
-content: document.getElementById("content").value,
-
-category: document.getElementById("category").value,
-
-fontFamily: document.getElementById("fontFamily").value,
-
-fontSize: document.getElementById("fontSize").value,
-
-fontColor: document.getElementById("fontColor").value,
-
-image: fileUrl,
-
-fileType: fileUrl.toLowerCase().includes(".pdf")
-? "application/pdf"
-: "image",
-
-fileName: fileUrl
-? fileUrl.split("/").pop()
-: "",
-
-likes: 0,
-likedBy: [],
-comments: []
-});
-
 db.collection("posts").add({
     title: document.getElementById("title").value,
     content: document.getElementById("content").value,
     category: document.getElementById("category").value,
+    fontFamily: document.getElementById("fontFamily").value,
+    fontSize: document.getElementById("fontSize").value,
+    fontColor: document.getElementById("fontColor").value,
     image: fileUrl,
-    likes:0,
-    comments:[]
+    fileType: fileUrl.toLowerCase().includes(".pdf") ? "application/pdf" : "image",
+    fileName: fileUrl ? fileUrl.split("/").pop() : "",
+    likes: 0,
+    likedBy: [],
+    comments: [],
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
 });
 
 document.getElementById("title").value = "";
@@ -626,77 +601,40 @@ document.getElementById("fileUrl").value = "";
 render();
 }
 
-function loadPosts(){
 
-db.collection("posts")
-.orderBy("title")
-.onSnapshot(snapshot=>{
-
-posts=[];
-
-snapshot.forEach(doc=>{
-
-posts.push({
-id:doc.id,
-...doc.data()
-});
-
-});
-
-render();
-
-});
-
-}
-
-loadPosts();
-/* LIKE ONLY ONCE */
 function like(id){
-let p=posts.find(x=>x.id===id);
-let anonLikes=JSON.parse(localStorage.getItem("anonLikes"))||[];
-
-/* LOGGED IN USERS */
-if(currentUser){
-if(!p.likedBy.includes(currentUser.u)){   // ✅ FIXED
-p.likes++;
-p.likedBy.push(currentUser.u);            // ✅ FIXED
-}
-}
-
-/* NOT LOGGED IN USERS */
-else{
-if(anonLikes.includes(id)) return alert("Already liked");
-p.likes++;
-anonLikes.push(id);
-localStorage.setItem("anonLikes",JSON.stringify(anonLikes));
-}
-
-localStorage.setItem("posts",JSON.stringify(posts));
-render();
+  const anonLikes = JSON.parse(localStorage.getItem("anonLikes")) || [];
+  if(anonLikes.includes(id) && currentUser !== 'admin'){ alert("Already liked!"); return; }
+  db.collection("posts").doc(id).update({
+    likes: firebase.firestore.FieldValue.increment(1)
+  }).then(()=>{
+    if(currentUser !== 'admin'){
+      anonLikes.push(id);
+      localStorage.setItem("anonLikes", JSON.stringify(anonLikes));
+    }
+  });
 }
 
 /* COMMENTS */
+// REPLACE WITH:
 function commentPost(id){
-let text = document.getElementById("cmt-"+id).value;
-let nameInput = document.getElementById("name-"+id).value;
-
-if(!text) return;
-
-let name = nameInput ? nameInput : (currentUser ? currentUser : "Anonymous");
-
-let p = posts.find(x=>x.id===id);
-p.comments.push(name + ": " + text);
-
-localStorage.setItem("posts", JSON.stringify(posts));
-render();
+  const text = document.getElementById("cmt-"+id).value.trim();
+  const nameVal = document.getElementById("name-"+id).value.trim();
+  if(!text) return;
+  const name = nameVal || (currentUser ? currentUser : "Anonymous");
+  db.collection("posts").doc(id).update({
+    comments: firebase.firestore.FieldValue.arrayUnion(name + ": " + text)
+  }).then(()=>{
+    document.getElementById("cmt-"+id).value = "";
+    document.getElementById("name-"+id).value = "";
+  });
 }
-
 /* DELETE (ADMIN ONLY) */
+// REPLACE WITH:
 function deletePost(id){
-if(currentUser!=='admin') return;
-posts = posts.filter(p => p.id !== id);
-localStorage.setItem("posts", JSON.stringify(posts));
-render();
+  if(currentUser !== 'admin') return;
+  if(!confirm("Delete this post?")) return;
+  db.collection("posts").doc(id).delete();
 }
 
 function showContact(){
@@ -706,17 +644,13 @@ currentView = "contact";
 render();
 
 }
+// REPLACE WITH:
 function deleteComment(postId, commentIndex){
-
-if(currentUser !== 'admin') return;
-
-let p = posts.find(x => x.id === postId);
-
-p.comments.splice(commentIndex,1);
-
-localStorage.setItem("posts", JSON.stringify(posts));
-
-render();
+  if(currentUser !== 'admin') return;
+  const p = posts.find(x => x.id === postId);
+  const updatedComments = [...(p.comments || [])];
+  updatedComments.splice(commentIndex, 1);
+  db.collection("posts").doc(postId).update({ comments: updatedComments });
 }
 /* SHARE */
 function copyLink(id){
@@ -861,31 +795,19 @@ document.getElementById("contactSection")
         leaderboardSection.classList.remove('hidden');
         postsSection.classList.add('hidden');
 
-        leaderboard.innerHTML = `
-<div class='house-box' style='background:blue'>
-Bluebells: ${housePoints.bluebells}
-${currentUser==='admin' ? `<br><input id="bpts" type="number" placeholder="Edit">
-<button onclick="updatePoints('bluebells')">✔</button>` : ''}
-</div>
-
-<div class='house-box' style='background:gold;color:black'>
-Daffodils: ${housePoints.daffodils}
-${currentUser==='admin' ? `<br><input id="dpts" type="number" placeholder="Edit">
-<button onclick="updatePoints('daffodils')">✔</button>` : ''}
-</div>
-
-<div class='house-box' style='background:red'>
-Roses: ${housePoints.roses}
-${currentUser==='admin' ? `<br><input id="rpts" type="number" placeholder="Edit">
-<button onclick="updatePoints('roses')">✔</button>` : ''}
-</div>
-
-<div class='house-box' style='background:green'>
-Shamrocks: ${housePoints.shamrocks}
-${currentUser==='admin' ? `<br><input id="spts" type="number" placeholder="Edit">
-<button onclick="updatePoints('shamrocks')">✔</button>` : ''}
-</div>
-`;
+db.collection("leaderboard").doc("points").get().then(doc => {
+  const pts = doc.exists ? doc.data() : {bluebells:0,daffodils:0,roses:0,shamrocks:0};
+  const adminCtrl = (house, inputId) => currentUser === 'admin'
+    ? `<br><input id="${inputId}" type="number" placeholder="Set points" style="width:80px;">
+       <button onclick="updatePoints('${house}')">✔</button>`
+    : '';
+  leaderboard.innerHTML = `
+    <div class='house-box' style='background:blue'>Bluebells: ${pts.bluebells||0}${adminCtrl('bluebells','bpts')}</div>
+    <div class='house-box' style='background:gold;color:black'>Daffodils: ${pts.daffodils||0}${adminCtrl('daffodils','dpts')}</div>
+    <div class='house-box' style='background:red'>Roses: ${pts.roses||0}${adminCtrl('roses','rpts')}</div>
+    <div class='house-box' style='background:green'>Shamrocks: ${pts.shamrocks||0}${adminCtrl('shamrocks','spts')}</div>
+  `;
+});
         return;
     }
 
@@ -945,31 +867,25 @@ text-decoration:${p.underline ? 'underline' : 'none'};
 ">
 ${p.content}
 </p>
-
             <div class="actions">
-                <button onclick="like(${p.id})">❤️ ${p.likes}</button>
-
+                <button onclick="like('${p.id}')">❤️ ${p.likes}</button>
                 ${currentUser === 'admin' ? `
-                    <button onclick="deletePost(${p.id})">🗑️</button>
+                    <button onclick="deletePost('${p.id}')">🗑️</button>
                 ` : ''}
-
-                <button onclick="copyLink(${p.id})">🔗 Copy</button>
-                <button onclick="shareWhatsApp(${p.id})">📱 WhatsApp</button>
+                <button onclick="copyLink('${p.id}')">🔗 Copy</button>
+                <button onclick="shareWhatsApp('${p.id}')">📱 WhatsApp</button>
                 <button onclick="shareInstagram()">📸 Instagram</button>
             </div>
-
             <input id="name-${p.id}" placeholder="Your name">
             <input id="cmt-${p.id}" placeholder="Comment">
-            <button onclick="commentPost(${p.id})">Post</button>
-
+            <button onclick="commentPost('${p.id}')">Post</button>
             <div>
 ${(p.comments || []).map((x,i)=>
 `
 <div style="margin-top:5px;">
 ${x}
-
 ${currentUser === 'admin' ? `
-<button onclick="deleteComment(${p.id},${i})"
+<button onclick="deleteComment('${p.id}',${i})"
 style="margin-left:8px;border:none;background:red;color:white;border-radius:5px;cursor:pointer;">
 🗑️
 </button>
@@ -983,28 +899,13 @@ style="margin-left:8px;border:none;background:red;color:white;border-radius:5px;
     });
 }
 
-
-/* LOAD POSTS FROM FIRESTORE */
-
-db.collection("posts").onSnapshot(snapshot=>{
-
-posts=[];
-
-snapshot.forEach(doc=>{
-
-posts.push({
-
-id:doc.id,
-
-...doc.data()
-
-});
-
-});
-
-render();
-
-});
+db.collection("posts")
+  .orderBy("createdAt", "desc")
+  .onSnapshot(snapshot => {
+    posts = [];
+    snapshot.forEach(doc => posts.push({ id: doc.id, ...doc.data() }));
+    render();
+  });
 
 
 </script>
@@ -1031,5 +932,6 @@ border-radius:12px;
 ">
 
 </div>
+
 </body>
 </html>
