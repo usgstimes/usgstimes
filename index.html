@@ -523,42 +523,7 @@ function setView(v){currentView=v;render();}
 function signup(){
 alert("Signup disabled. Use admin login.");
 }
-async function login(){
 
-const userId =
-document.getElementById("user").value.trim();
-
-const password =
-document.getElementById("pass").value;
-
-if(userId !== "admin"){
-    alert("Wrong User ID");
-    return;
-}
-
-try{
-
-    await auth.signInWithEmailAndPassword(
-        "admin@usgstimes.com",
-        password
-    );
-
-    currentUser = "admin";
-
-    authArea.innerHTML =
-    `Admin <button onclick="logout()">Logout</button>`;
-
-    publishTab.classList.remove("hidden");
-
-    render();
-
-}catch(error){
-
-    alert("Wrong Password");
-
-}
-
-}
 async function logout(){
 
 await auth.signOut();
@@ -743,11 +708,7 @@ function render(){
 	postsContainer.innerHTML = "";
 	let authArea = document.getElementById("authArea");
 
-	if(currentView === "all"){
-    authArea.classList.remove("hidden");
-	} else {
-    authArea.classList.add("hidden");
-	}
+
 
     housesSection.classList.add('hidden');
     leaderboardSection.classList.add('hidden');
@@ -911,10 +872,15 @@ db.collection("posts")
     render();
   });
 auth.onAuthStateChanged(user => {
-  if(user){
+  if(user && user.email === "admin@usgstimes.com"){
     currentUser = "admin";
     publishTab.classList.remove("hidden");
+    document.querySelector(".nav").innerHTML += 
+      `<span style="color:white;font-size:14px;">Admin ✅ <button onclick="logout()" style="padding:6px 12px;border:none;border-radius:6px;cursor:pointer;">Logout</button></span>`;
     render();
+  } else if(user) {
+    // Logged in but NOT admin — sign them out immediately
+    auth.signOut();
   }
 });
 
