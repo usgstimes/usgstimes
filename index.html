@@ -223,7 +223,7 @@ Stay updated with the latest stories, events, and achievements from our school c
     </div>
 </div>
 
-<button class="big-btn" onclick="setView('Newspaper Archive')">📰Newspaper Archive</button>
+<button class="big-btn" onclick="setView('Newspaper Archive')">🎲Newspaper Archive</button>
 
 <button class="big-btn" onclick="setView('houses')">🏡 Houses</button>
 <button class="big-btn" onclick="setView('leaderboard')">🏆 Leaderboard</button>
@@ -771,10 +771,11 @@ function render(){
     }
 
     if(currentView === 'houses'){
-        housesSection.classList.remove('hidden');
-        postsSection.classList.add('hidden');
-        return;
-    }
+    housesSection.classList.remove('hidden');
+    postsSection.classList.add('hidden');
+    document.getElementById("contactSection").classList.add('hidden');
+    return;
+}
 	if(currentView === 'contact'){
 
 document.getElementById("contactSection")
@@ -874,7 +875,7 @@ text-decoration:${p.underline ? 'underline' : 'none'};
 ${p.content}
 </p>
             <div class="actions">
-                <button onclick="like('${p.id}')">❤️ ${p.likes}</button>
+                <button onclick="like('${p.id}')" style="${JSON.parse(localStorage.getItem('anonLikes')||'[]').includes(p.id) ? 'opacity:0.5;cursor:not-allowed' : ''}">❤️ ${p.likes}</button>
                 ${currentUser === 'admin' ? `
                     <button onclick="deletePost('${p.id}')">🗑️</button>
                 ` : ''}
