@@ -566,16 +566,30 @@ render();
 }
 
 
-function like(id){
-  const anonLikes = JSON.parse(localStorage.getItem("anonLikes")) || [];
-  if(anonLikes.includes(id) && currentUser !== 'admin'){ alert("Already liked!"); return; }
-  db.collection("posts").doc(id).update({
-    likes: firebase.firestore.FieldValue.increment(1)
-  }).then(()=>{
-    if(currentUser !== 'admin'){
-      anonLikes.push(id);
-      localStorage.setItem("anonLikes", JSON.stringify(anonLikes));
-    }
+async function like(id){
+
+  let deviceId = localStorage.getItem("deviceId");
+
+  if(!deviceId){
+    deviceId = crypto.randomUUID();
+    localStorage.setItem("deviceId", deviceId);
+  }
+
+  const postRef = db.collection("posts").doc(id);
+  const doc = await postRef.get();
+
+  if(!doc.exists) return;
+
+  const data = doc.data();
+
+  if((data.likedBy || []).includes(deviceId)){
+    alert("You already liked this post!");
+    return;
+  }
+
+  await postRef.update({
+    likes: firebase.firestore.FieldValue.increment(1),
+    likedBy: firebase.firestore.FieldValue.arrayUnion(deviceId)
   });
 }
 
