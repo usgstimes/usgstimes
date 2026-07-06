@@ -596,16 +596,35 @@ async function like(id){
 /* COMMENTS */
 // REPLACE WITH:
 function commentPost(id){
-  const text = document.getElementById("cmt-"+id).value.trim();
-  const nameVal = document.getElementById("name-"+id).value.trim();
-  if(!text) return;
-  const name = nameVal || (currentUser ? currentUser : "Anonymous");
-  db.collection("posts").doc(id).update({
-    comments: firebase.firestore.FieldValue.arrayUnion(name + ": " + text)
-  }).then(()=>{
-    document.getElementById("cmt-"+id).value = "";
-    document.getElementById("name-"+id).value = "";
-  });
+
+    const text = document.getElementById("cmt-"+id).value.trim();
+    const nameVal = document.getElementById("name-"+id).value.trim();
+
+    if(!text) return;
+
+    const name = nameVal || (currentUser ? currentUser : "Anonymous");
+
+    let deviceId = localStorage.getItem("deviceId");
+
+    if(!deviceId){
+        deviceId = crypto.randomUUID();
+        localStorage.setItem("deviceId", deviceId);
+    }
+
+    const comment = {
+        id: crypto.randomUUID(),
+        name: name,
+        text: text,
+        deviceId: deviceId
+    };
+
+    db.collection("posts").doc(id).update({
+        comments: firebase.firestore.FieldValue.arrayUnion(comment)
+    }).then(()=>{
+        document.getElementById("cmt-"+id).value = "";
+        document.getElementById("name-"+id).value = "";
+    });
+
 }
 /* DELETE (ADMIN ONLY) */
 // REPLACE WITH:
@@ -623,12 +642,28 @@ render();
 
 }
 // REPLACE WITH:
-function deleteComment(postId, commentIndex){
-  if(currentUser !== 'admin') return;
-  const p = posts.find(x => x.id === postId);
-  const updatedComments = [...(p.comments || [])];
-  updatedComments.splice(commentIndex, 1);
-  db.collection("posts").doc(postId).update({ comments: updatedComments });
+function deleteComment(postId, commentId){
+
+    const post = posts.find(p => p.id === postId);
+
+    if(!post) return;
+
+    const myDevice = localStorage.getItem("deviceId");
+
+    const updated = post.comments.filter(c => {
+        if(currentUser === "admin") return c.id !== commentId;
+
+        if(c.id === commentId && c.deviceId === myDevice){
+            return false;
+        }
+
+        return true;
+    });
+
+    db.collection("posts").doc(postId).update({
+        comments: updated
+    });
+
 }
 /* SHARE */
 function copyLink(id){
@@ -873,21 +908,28 @@ ${p.content}
             <input id="name-${p.id}" placeholder="Your name">
             <input id="cmt-${p.id}" placeholder="Comment">
             <button onclick="commentPost('${p.id}')">Post</button>
-            <div>
-${(p.comments || []).map((x,i)=>
-`
-<div style="margin-top:5px;">
-${x}
-${currentUser === 'admin' ? `
-<button onclick="deleteComment('${p.id}',${i})"
-style="margin-left:8px;border:none;background:red;color:white;border-radius:5px;cursor:pointer;">
+<div style="
+max-height:220px;
+overflow-y:auto;
+border:1px solid #ddd;
+padding:8px;
+margin-top:10px;
+border-radius:8px;
+background:#fafafa;
+">
+${(p.comments || []).map(c => `
+<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #ddd;">
+<strong>${c.name}</strong>: ${c.text}
+
+${currentUser === "admin" || c.deviceId === localStorage.getItem("deviceId") ? `
+<button
+onclick="deleteComment('${p.id}','${c.id}')"
+style="float:right;border:none;background:red;color:white;border-radius:5px;cursor:pointer;">
 🗑️
 </button>
-` : ''}
-
+` : ""}
 </div>
-`
-).join("")}
+`).join("")}
 </div>
         </div>`;
     });
