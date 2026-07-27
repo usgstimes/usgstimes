@@ -239,7 +239,7 @@ body.dark .leaderboard tr{
         <a onclick="filterCategory('Reviews')">Reviews</a>
       </div>
     </div>
-    <a onclick="filterCategory('Random Writes')">Random Writes</a>
+    
     <a onclick="showPage('page-archive')">Archive</a>
     <a onclick="showPage('page-houses')">Houses</a>
     <a onclick="showPage('page-leaderboard')">Leaderboard</a>
@@ -253,7 +253,7 @@ body.dark .leaderboard tr{
       <option value="Stories">Stories</option>
       <option value="Poetry">Poetry</option>
       <option value="Reviews">Reviews</option>
-      <option value="Random Writes">Random Writes</option>
+      
     </select>
     <div class="circle-btn" id="themeBtn">🌙</div>
   </div>
@@ -284,7 +284,7 @@ body.dark .leaderboard tr{
     <div class="category-grid">
       <div class="category-card" onclick="filterCategory('Events')"><div class="category-icon">🎉</div><h3>Events</h3><p>School events, celebrations, competitions and special assemblies.</p><a>Explore →</a></div>
       <div class="category-card" onclick="filterCategory('Stories')"><div class="category-icon">📖</div><h3>Boundless Imagination</h3><p>Stories, poems, reviews and creative student writing.</p><a>Explore →</a></div>
-      <div class="category-card" onclick="filterCategory('Random Writes')"><div class="category-icon">📰</div><h3>Random Writes</h3><p>Opinion pieces, editorials and interesting articles.</p><a>Explore →</a></div>
+      
     </div>
   </section>
 </div>
@@ -467,7 +467,7 @@ function filterCategory(category){
   document.getElementById("postsHeading").innerText =
     category === "All" ? "Latest Articles" : category;
   document.getElementById("categoryFilter").value =
-    ["All","Events","Stories","Poetry","Reviews","Random Writes"].includes(category) ? category : "All";
+    ["All","Events","Stories","Poetry","Reviews"].includes(category) ? category : "All";
   showPage("page-articles");
   renderPosts();
 }
