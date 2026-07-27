@@ -4,24 +4,147 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>USGS Times — Admin</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-body{margin:0;font-family:'Segoe UI',sans-serif;background:#f5f6fa;display:flex;justify-content:center;align-items:center;height:100vh;}
-.box{background:white;padding:40px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1);text-align:center;width:300px;}
-input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #ccc;box-sizing:border-box;font-size:15px;}
-button{width:100%;padding:14px;background:linear-gradient(135deg,#4b5d9a,#6c7ae0);color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;margin-top:10px;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{background:linear-gradient(135deg,#eef4ff,#f8fbff,#e8f1ff);color:#222;min-height:100vh;}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:20px 6%;background:rgba(255,255,255,.85);backdrop-filter:blur(15px);box-shadow:0 10px 30px rgba(0,0,0,.06);}
+.topbar h1{font-size:24px;color:#2563eb;}
+.topbar button{padding:12px 22px;border:none;border-radius:30px;background:#0f172a;color:white;cursor:pointer;font-weight:600;}
+
+.wrap{max-width:1100px;margin:40px auto;padding:0 20px;}
+.card{background:white;border-radius:25px;padding:35px;box-shadow:0 20px 50px rgba(0,0,0,.08);margin-bottom:35px;}
+.card h2{margin-bottom:20px;font-size:26px;}
+input,textarea,select{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1px solid #ddd;font-size:15px;}
+textarea{height:150px;resize:vertical;}
+label{font-weight:600;font-size:14px;color:#555;display:block;margin-top:14px;}
+.btn{padding:14px 30px;border:none;border-radius:30px;background:#2563eb;color:white;font-weight:700;cursor:pointer;margin-top:14px;font-size:15px;}
+.btn:hover{filter:brightness(110%);}
+.btn.danger{background:#dc2626;}
+.btn.small{padding:8px 16px;font-size:13px;}
+
+#loginBox{max-width:420px;margin:80px auto;}
+.hidden{display:none !important;}
+
+.postRow{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:16px 0;border-bottom:1px solid #eee;flex-wrap:wrap;}
+.postRow .meta{flex:1;min-width:200px;}
+.postRow .meta h3{font-size:17px;}
+.postRow .meta span{font-size:13px;color:#888;}
+.postRow .actions{display:flex;gap:8px;}
+
+.housesGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+.houseRow{padding:20px;border-radius:16px;color:white;display:flex;flex-direction:column;gap:10px;}
+.houseRow .controls{display:flex;align-items:center;gap:10px;}
+.houseRow input{width:80px;color:#222;margin:0;}
+.houseRow button{padding:8px 14px;border:none;border-radius:10px;background:rgba(255,255,255,.9);color:#222;font-weight:700;cursor:pointer;}
+.blue{background:#2563eb;}.yellow{background:#eab308;}.red{background:#dc2626;}.green{background:#16a34a;}
+
+.editingBanner{background:#fff7e6;border:1px solid #f59e0b;padding:10px 16px;border-radius:12px;margin-bottom:14px;font-size:14px;}
 </style>
 </head>
 <body>
-<div class="box">
-  <h2>🔐 Admin Login</h2>
-  <p style="color:#888;">USGS Times Staff Only</p>
-  <input id="pass" type="password" placeholder="Enter password">
-  <button onclick="login()">Login</button>
-  <p id="msg" style="color:red;margin-top:10px;"></p>
+
+<div id="loginBox" class="card">
+  <h2>Admin Login</h2>
+  <label>Email</label>
+  <input id="loginEmail" placeholder="admin@usgstimes.com" value="admin@usgstimes.com">
+  <label>Password</label>
+  <input id="loginPass" type="password" placeholder="Password">
+  <button class="btn" onclick="login()">Login</button>
 </div>
 
+<div id="adminArea" class="hidden">
+  <div class="topbar">
+    <h1>USGS Times — Admin</h1>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div class="wrap">
+
+    <div class="card">
+      <h2>Publish Post</h2>
+      <div id="editingBanner" class="editingBanner hidden">Editing an existing post — Publish will save your changes. <a href="#" onclick="cancelEdit();return false;">Cancel</a></div>
+      <label>Title</label>
+      <input id="title" placeholder="Post title">
+      <label>Category</label>
+      <select id="category">
+        <option>Events</option>
+        <option>Stories</option>
+        <option>Poetry</option>
+        <option>Reviews</option>
+        <option>Random Writes</option>
+      </select>
+      <label>Content</label>
+      <textarea id="content" placeholder="Write the article..."></textarea>
+      <label>Image URL</label>
+      <input id="imageUrl" placeholder="https://... (image link)">
+      <button class="btn" onclick="publish()" id="publishBtn">🚀 Publish Post</button>
+    </div>
+
+    <div class="card">
+      <h2>Published Posts</h2>
+      <div id="postsList">Loading…</div>
+    </div>
+
+    <div class="card">
+      <h2>Upload Archive Edition (PDF)</h2>
+      <label>Edition Title</label>
+      <input id="editionTitle" placeholder="e.g. July 2026">
+      <label>PDF URL</label>
+      <input id="editionPdf" placeholder="https://... (PDF link)">
+      <button class="btn" onclick="uploadEdition()">📄 Add Edition</button>
+	  <div id="editionsList" style="margin-top:20px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>House Points</h2>
+      <div class="housesGrid">
+        <div class="houseRow blue">
+          <h3>Bluebells</h3>
+          <div class="controls">
+            <button onclick="adjust('bluebells',-10)">−10</button>
+            <input id="pts-bluebells" type="number">
+            <button onclick="adjust('bluebells',10)">+10</button>
+            <button onclick="savePoints('bluebells')">Save</button>
+          </div>
+        </div>
+        <div class="houseRow yellow">
+          <h3>Daffodils</h3>
+          <div class="controls">
+            <button onclick="adjust('daffodils',-10)">−10</button>
+            <input id="pts-daffodils" type="number">
+            <button onclick="adjust('daffodils',10)">+10</button>
+            <button onclick="savePoints('daffodils')">Save</button>
+          </div>
+        </div>
+        <div class="houseRow red">
+          <h3>Roses</h3>
+          <div class="controls">
+            <button onclick="adjust('roses',-10)">−10</button>
+            <input id="pts-roses" type="number">
+            <button onclick="adjust('roses',10)">+10</button>
+            <button onclick="savePoints('roses')">Save</button>
+          </div>
+        </div>
+        <div class="houseRow green">
+          <h3>Shamrocks</h3>
+          <div class="controls">
+            <button onclick="adjust('shamrocks',-10)">−10</button>
+            <input id="pts-shamrocks" type="number">
+            <button onclick="adjust('shamrocks',10)">+10</button>
+            <button onclick="savePoints('shamrocks')">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyD608uNQLlhvXdoqzIcQQ01D6tMjNI0I6s",
@@ -29,20 +152,172 @@ const firebaseConfig = {
   projectId: "usgs-times",
   storageBucket: "usgs-times.firebasestorage.app",
   messagingSenderId: "34714674408",
-  appId: "1:34714674408:web:2ebd7c55a9475e618bd55d"
+  appId: "1:34714674408:web:2ebd7c55a9475e618bd55d",
+  measurementId: "G-E50KECJGVS"
 };
 firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 const auth = firebase.auth();
 
+let editingId = null;
+let allPosts = [];
+let currentPoints = { bluebells:0, daffodils:0, roses:0, shamrocks:0 };
+
+/* ---------- auth ---------- */
 async function login(){
-  const password = document.getElementById("pass").value;
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPass").value;
   try{
-    await auth.signInWithEmailAndPassword("admin@usgstimes.com", password);
-    // Redirect to main site as admin
-    window.location.href = "index.html?admin=true";
-  }catch(e){
-    document.getElementById("msg").innerText = "Wrong password!";
+    await auth.signInWithEmailAndPassword(email, pass);
+  }catch(err){
+    alert("Login failed: " + err.message);
   }
+}
+function logout(){ auth.signOut(); }
+
+auth.onAuthStateChanged(user => {
+  if(user){
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("adminArea").classList.remove("hidden");
+  }else{
+    document.getElementById("loginBox").classList.remove("hidden");
+    document.getElementById("adminArea").classList.add("hidden");
+  }
+});
+
+/* ---------- publish / edit ---------- */
+function publish(){
+  const title = document.getElementById("title").value.trim();
+  const category = document.getElementById("category").value;
+  const content = document.getElementById("content").value.trim();
+  const image = document.getElementById("imageUrl").value.trim();
+  if(!title || !content){ alert("Title and content are required."); return; }
+
+  if(editingId){
+    db.collection("posts").doc(editingId).update({
+      title, category, content, image
+    }).then(cancelEdit);
+  }else{
+    db.collection("posts").add({
+      title, category, content, image,
+      likes: 0,
+      comments: [],
+      created: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(clearForm);
+  }
+}
+function clearForm(){
+  document.getElementById("title").value = "";
+  document.getElementById("content").value = "";
+  document.getElementById("imageUrl").value = "";
+}
+function editPost(id){
+  const p = allPosts.find(x => x.id === id);
+  if(!p) return;
+  editingId = id;
+  document.getElementById("title").value = p.title || "";
+  document.getElementById("category").value = p.category || "Events";
+  document.getElementById("content").value = p.content || "";
+  document.getElementById("imageUrl").value = p.image || "";
+  document.getElementById("editingBanner").classList.remove("hidden");
+  document.getElementById("publishBtn").innerText = "💾 Save Changes";
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function cancelEdit(){
+  editingId = null;
+  clearForm();
+  document.getElementById("editingBanner").classList.add("hidden");
+  document.getElementById("publishBtn").innerText = "🚀 Publish Post";
+}
+function deletePost(id){
+  if(!confirm("Delete this post?")) return;
+  db.collection("posts").doc(id).delete();
+}
+
+db.collection("posts").orderBy("created", "desc").onSnapshot(snapshot => {
+  allPosts = [];
+  snapshot.forEach(doc => allPosts.push({ id: doc.id, ...doc.data() }));
+  renderPostsList();
+});
+
+function renderPostsList(){
+  const el = document.getElementById("postsList");
+  if(allPosts.length === 0){ el.innerHTML = "<p>No posts published yet.</p>"; return; }
+  el.innerHTML = allPosts.map(p => `
+    <div class="postRow" style="flex-direction:column;align-items:stretch;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;">
+        <div class="meta">
+          <h3>${p.title || "Untitled"}</h3>
+          <span>${p.category || ""} • ❤️ ${p.likes || 0} • 💬 ${(p.comments||[]).length}</span>
+        </div>
+        <div class="actions">
+          <button class="btn small" onclick="editPost('${p.id}')">✏ Edit</button>
+          <button class="btn small danger" onclick="deletePost('${p.id}')">🗑 Delete</button>
+        </div>
+      </div>
+      ${(p.comments||[]).length ? `
+        <div style="margin-top:10px;padding-left:10px;border-left:3px solid #eee;">
+          ${p.comments.map(c => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;">
+              <span><strong>${c.name}</strong>: ${c.text}</span>
+              <button class="btn small danger" onclick="deleteAdminComment('${p.id}','${c.cid}')">✕</button>
+            </div>`).join("")}
+        </div>` : ""}
+    </div>
+  `).join("");
+}
+function deleteAdminComment(postId, cid){
+  if(!confirm("Delete this comment?")) return;
+  const p = allPosts.find(x => x.id === postId);
+  const updated = (p.comments || []).filter(c => c.cid !== cid);
+  db.collection("posts").doc(postId).update({ comments: updated });
+}
+
+/* ---------- archive editions ---------- */
+function uploadEdition(){
+  const title = document.getElementById("editionTitle").value.trim();
+  const pdf = document.getElementById("editionPdf").value.trim();
+  if(!pdf){ alert("Please paste a PDF URL."); return; }
+  db.collection("archive").add({
+    title, pdf,
+    created: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    document.getElementById("editionTitle").value = "";
+    document.getElementById("editionPdf").value = "";
+  });
+}
+db.collection("archive").orderBy("created","desc").onSnapshot(snapshot=>{
+  const editions=[];
+  snapshot.forEach(doc=>editions.push({id:doc.id,...doc.data()}));
+  const el=document.getElementById("editionsList");
+  el.innerHTML = editions.length ? editions.map(e=>`
+    <div class="postRow">
+      <div class="meta"><h3>${e.title||"Untitled Edition"}</h3></div>
+      <div class="actions">
+        <button class="btn small" onclick="window.open('${e.pdf}','_blank')">Open</button>
+        <button class="btn small danger" onclick="deleteEdition('${e.id}')">🗑 Delete</button>
+      </div>
+    </div>`).join("") : "<p>No editions uploaded yet.</p>";
+});
+function deleteEdition(id){
+  if(!confirm("Delete this edition?")) return;
+  db.collection("archive").doc(id).delete();
+}
+/* ---------- house points ---------- */
+db.collection("housepoints").doc("scores").onSnapshot(doc => {
+  currentPoints = doc.exists ? doc.data() : { bluebells:0, daffodils:0, roses:0, shamrocks:0 };
+  ["bluebells","daffodils","roses","shamrocks"].forEach(h => {
+    document.getElementById("pts-"+h).value = currentPoints[h] || 0;
+  });
+});
+function adjust(house, amount){
+  const input = document.getElementById("pts-"+house);
+  input.value = (parseInt(input.value) || 0) + amount;
+}
+function savePoints(house){
+  const val = parseInt(document.getElementById("pts-"+house).value) || 0;
+  db.collection("housepoints").doc("scores").set({ [house]: val }, { merge: true })
+    .then(() => alert("Points saved!"));
 }
 </script>
 </body>
