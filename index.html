@@ -618,16 +618,19 @@ function addComment(id){
     return;
   }
 db.collection("posts").doc(id).update({
-    comments: firebase.firestore.FieldValue.arrayUnion({
-      cid: Date.now().toString(36) + Math.random().toString(36).slice(2),
-      name: name,
-      text: text,
-      date: new Date()
-    })
-  });
+  comments: firebase.firestore.FieldValue.arrayUnion({
+    cid: Date.now().toString(36) + Math.random().toString(36).slice(2),
+    name: name,
+    text: text,
+    date: new Date()
+  })
+}).then(() => {
   nameInput.value = "";
   commentInput.value = "";
-}
+}).catch(err => {
+  alert("Couldn't post comment: " + err.message);
+  console.error(err);
+});
 
 /* ---------- share ---------- */
 function sharePost(id){
