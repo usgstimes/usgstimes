@@ -73,7 +73,7 @@ label{font-weight:600;font-size:14px;color:#555;display:block;margin-top:14px;}
         <option>Stories</option>
         <option>Poetry</option>
         <option>Reviews</option>
-        
+        <option>Random Writes</option>
       </select>
       <label>Content</label>
       <textarea id="content" placeholder="Write the article..."></textarea>
@@ -278,10 +278,12 @@ function uploadEdition(){
   const title = document.getElementById("editionTitle").value.trim();
   const pdf = document.getElementById("editionPdf").value.trim();
   if(!pdf){ alert("Please paste a PDF URL."); return; }
-  db.collection("archive").add({
-    title, pdf,
-    created: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
+db.collection("archive").add({
+  title, pdf,
+  likes: 0,
+  comments: [],
+  created: firebase.firestore.FieldValue.serverTimestamp()
+}).then(() => {
     document.getElementById("editionTitle").value = "";
     document.getElementById("editionPdf").value = "";
   });
