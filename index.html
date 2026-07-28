@@ -540,38 +540,33 @@ function buildCard(p){
   const liked = likedIds.includes(p.id);
   const saved = savedIds.includes(p.id);
   const comments = p.comments || [];
-
 card.innerHTML = `
-  <div class="pdfPreviewWrap" onclick="openPdfPreview('${data.pdf}')" style="cursor:pointer;border-radius:16px;overflow:hidden;height:260px;background:linear-gradient(135deg,#2563eb,#4ea4ff);display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:14px;position:relative;">
-    <div class="pdfFallback" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;z-index:1;">
-      <div style="font-size:60px;">📄</div>
-      <div style="font-weight:700;margin-top:8px;font-size:14px;">Tap to open PDF</div>
+  ${p.image ? `<img src="${p.image}" onclick="openImage('${p.image}')">` : ""}
+  <div class="article-body">
+    <span class="cat-tag">${p.category || ""}</span>
+    <h3>${escapeHtml(p.title || "")}</h3>
+    <p>${escapeHtml(p.content || "")}</p>
+    <div class="post-meta">${dateStr ? `<span>🗓 ${dateStr}</span>` : ""}</div>
+    <div class="post-actions">
+      <button class="likeBtn ${liked ? "liked" : ""}" onclick="likePost('${p.id}', this)">❤️ <span>${p.likes || 0}</span></button>
+      <button class="bookmarkBtn ${saved ? "saved" : ""}" onclick="toggleBookmark('${p.id}', this)">${saved ? "⭐ Saved" : "🔖 Save"}</button>
+      <button onclick="sharePost('${p.id}')">🔗 Share</button>
     </div>
-    <embed src="${data.pdf}#page=1&toolbar=0&navpanes=0&scrollbar=0" type="application/pdf" style="width:100%;height:100%;pointer-events:none;position:relative;z-index:2;">
-  </div>
-  <h3>${escapeHtml(data.title || ("Edition " + editionNumber))}</h3>
-  <p>Edition #${editionNumber}</p>
-  <a class="downloadBtn" href="${data.pdf}" target="_blank">Open PDF</a>
-  <div class="post-actions" style="justify-content:center;margin-top:16px;">
-    <button class="likeBtn ${liked ? "liked" : ""}" onclick="likeEdition('${data.id}', this)">❤️ <span>${data.likes || 0}</span></button>
-    <button class="bookmarkBtn ${saved ? "saved" : ""}" onclick="toggleBookmarkEdition('${data.id}', this)">${saved ? "⭐ Saved" : "🔖 Save"}</button>
-    <button onclick="shareEdition('${data.id}')">🔗 Share</button>
-  </div>
-  <div class="comments">
-    <div class="commentRow">
-      <input class="commentName" placeholder="Your name" id="ename-${data.id}">
-      <input class="commentInput" placeholder="Write a comment" id="ecmt-${data.id}">
-      <button class="sendComment" onclick="addEditionComment('${data.id}')">Post</button>
-    </div>
-    <div class="commentList" id="eclist-${data.id}">
-    ${comments.slice().reverse().map(c => `
+    <div class="comments">
+      <div class="commentRow">
+        <input class="commentName" placeholder="Your name" id="name-${p.id}">
+        <input class="commentInput" placeholder="Write a comment" id="cmt-${p.id}">
+        <button class="sendComment" onclick="addComment('${p.id}')">Post</button>
+      </div>
+      <div class="commentList" id="clist-${p.id}">
+${comments.slice().reverse().map(c => `
         <div class="comment">
           <div>
             <b>${escapeHtml(c.name || "Anonymous")}</b>: ${escapeHtml(c.text || "")}
             ${c.date ? `<span class="cdate">${new Date(c.date.seconds ? c.date.seconds*1000 : c.date).toLocaleString()}</span>` : ""}
           </div>
-          <button class="commentDel" onclick="deleteEditionComment('${data.id}','${c.cid}')">✕</button>
         </div>`).join("")}
+      </div>
     </div>
   </div>
 `;
