@@ -247,14 +247,14 @@ body.dark .leaderboard tr{
     <a onclick="showPage('page-contact')">Contact</a>
   </div>
   <div class="nav-icons">
-    <select id="categoryFilter" onchange="filterCategory(this.value)">
-      <option value="All">All</option>
-      <option value="Events">Events</option>
-      <option value="Stories">Stories</option>
-      <option value="Poetry">Poetry</option>
-      <option value="Reviews">Reviews</option>
-      
-    </select>
+<select id="categoryFilter" onchange="handleCategorySelect(this.value)">
+  <option value="All">All</option>
+  <option value="Events">Events</option>
+  <option value="Stories">Stories</option>
+  <option value="Poetry">Poetry</option>
+  <option value="Reviews">Reviews</option>
+  <option value="Archive">Archive</option>
+</select>
     <div class="circle-btn" id="themeBtn">🌙</div>
   </div>
 </nav>
@@ -471,7 +471,13 @@ function filterCategory(category){
   showPage("page-articles");
   renderPosts();
 }
-
+function handleCategorySelect(value){
+  if(value === "Archive"){
+    showPage('page-archive');
+    return;
+  }
+  filterCategory(value);
+}
 function showBookmarks(){
   showingBookmarks = true;
   document.getElementById("postsHeading").innerText = "🔖 Saved Articles";
@@ -479,24 +485,42 @@ function showBookmarks(){
   renderPosts();
 }
 
-/* ---------- render ---------- */
 function renderPosts(){
   const container = document.getElementById("postsContainer");
   container.innerHTML = "";
 
-  let list = allPosts;
   if(showingBookmarks){
-    list = allPosts.filter(p => savedIds.includes(p.id));
-  } else if(currentCategory !== "All"){
-    list = allPosts.filter(p => p.category === currentCategory);
+    const savedPosts = allPosts.filter(p => savedIds.includes(p.id));
+    const savedEditionsList = allEditions.filter(e => savedEditions.includes(e.id));
+
+    if(savedPosts.length === 0 && savedEditionsList.length === 0){
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">📰</div>
+          <h3>No saved items yet.</h3>
+          <p>Tap 🔖 on a post or archive edition to save it here.</p>
+        </div>`;
+      return;
+    }
+
+    savedPosts.forEach(p => container.appendChild(buildCard(p)));
+    savedEditionsList.forEach((e, idx) => {
+      const editionNumber = allEditions.length - allEditions.indexOf(e);
+      container.appendChild(buildArchiveCard(e, editionNumber));
+    });
+    return;
   }
+
+  let list = currentCategory !== "All"
+    ? allPosts.filter(p => p.category === currentCategory)
+    : allPosts;
 
   if(list.length === 0){
     container.innerHTML = `
       <div class="empty-state">
         <div class="icon">📰</div>
-        <h3>${showingBookmarks ? "No saved articles yet." : "No articles have been published yet."}</h3>
-        <p>${showingBookmarks ? "Tap 🔖 on a post to save it here." : "Check back soon!"}</p>
+        <h3>No articles have been published yet.</h3>
+        <p>Check back soon!</p>
       </div>`;
     return;
   }
@@ -536,14 +560,13 @@ function buildCard(p){
           <button class="sendComment" onclick="addComment('${p.id}')">Post</button>
         </div>
         <div class="commentList" id="clist-${p.id}">
-        ${comments.slice().reverse().map(c => `
-            <div class="comment">
-              <div>
-                <b>${escapeHtml(c.name || "Anonymous")}</b>: ${escapeHtml(c.text || "")}
-                ${c.date ? `<span class="cdate">${new Date(c.date.seconds ? c.date.seconds*1000 : c.date).toLocaleString()}</span>` : ""}
-              </div>
-              <button class="commentDel" onclick="deleteComment('${p.id}','${c.cid}')">✕</button>
-            </div>`).join("")}
+${comments.slice().reverse().map(c => `
+          <div class="comment">
+            <div>
+              <b>${escapeHtml(c.name || "Anonymous")}</b>: ${escapeHtml(c.text || "")}
+              ${c.date ? `<span class="cdate">${new Date(c.date.seconds ? c.date.seconds*1000 : c.date).toLocaleString()}</span>` : ""}
+            </div>
+          </div>`).join("")}
         </div>
       </div>
     </div>
@@ -605,13 +628,7 @@ db.collection("posts").doc(id).update({
   nameInput.value = "";
   commentInput.value = "";
 }
-function deleteComment(postId, cid){
-  if(!confirm("Delete this comment?")) return;
-  const post = allPosts.find(p => p.id === postId);
-  if(!post) return;
-  const updated = (post.comments || []).filter(c => c.cid !== cid);
-  db.collection("posts").doc(postId).update({ comments: updated });
-}
+
 /* ---------- share ---------- */
 function sharePost(id){
   const link = window.location.href.split("#")[0] + "#post-" + id;
@@ -650,10 +667,17 @@ db.collection("housepoints").doc("scores").onSnapshot(doc => {
 });
 
 /* ---------- archive editions, loaded live from Firestore ---------- */
+let allEditions = [];
+const likedEditions = JSON.parse(localStorage.getItem("likedEditions") || "[]");
+const savedEditions = JSON.parse(localStorage.getItem("savedEditions") || "[]");
+
 db.collection("archive").orderBy("created", "desc").onSnapshot(snapshot => {
   const container = document.getElementById("archiveContainer");
   container.innerHTML = "";
-  if(snapshot.empty){
+  allEditions = [];
+  snapshot.forEach(doc => allEditions.push({ id: doc.id, ...doc.data() }));
+
+  if(allEditions.length === 0){
     container.innerHTML = `
       <div class="empty-state">
         <div class="icon">🗞</div>
@@ -662,18 +686,103 @@ db.collection("archive").orderBy("created", "desc").onSnapshot(snapshot => {
       </div>`;
     return;
   }
-  let i = snapshot.size;
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    container.innerHTML += `
-      <div class="archive-card">
-        <h3>${escapeHtml(data.title || ("Edition " + i))}</h3>
-        <p>Edition #${i}</p>
-        <a class="downloadBtn" href="${data.pdf}" target="_blank">Open PDF</a>
-      </div>`;
+
+  let i = allEditions.length;
+  allEditions.forEach(data => {
+    container.appendChild(buildArchiveCard(data, i));
     i--;
   });
 });
+
+function buildArchiveCard(data, editionNumber){
+  const card = document.createElement("div");
+  card.className = "archive-card";
+  const liked = likedEditions.includes(data.id);
+  const saved = savedEditions.includes(data.id);
+  const comments = data.comments || [];
+
+  card.innerHTML = `
+    <h3>${escapeHtml(data.title || ("Edition " + editionNumber))}</h3>
+    <p>Edition #${editionNumber}</p>
+    <a class="downloadBtn" href="${data.pdf}" target="_blank">Open PDF</a>
+    <div class="post-actions" style="justify-content:center;margin-top:16px;">
+      <button class="likeBtn ${liked ? "liked" : ""}" onclick="likeEdition('${data.id}', this)">❤️ <span>${data.likes || 0}</span></button>
+      <button class="bookmarkBtn ${saved ? "saved" : ""}" onclick="toggleBookmarkEdition('${data.id}', this)">${saved ? "⭐ Saved" : "🔖 Save"}</button>
+      <button onclick="shareEdition('${data.id}')">🔗 Share</button>
+    </div>
+    <div class="comments">
+      <div class="commentRow">
+        <input class="commentName" placeholder="Your name" id="ename-${data.id}">
+        <input class="commentInput" placeholder="Write a comment" id="ecmt-${data.id}">
+        <button class="sendComment" onclick="addEditionComment('${data.id}')">Post</button>
+      </div>
+      <div class="commentList" id="eclist-${data.id}">
+      ${comments.slice().reverse().map(c => `
+          <div class="comment">
+            <div>
+              <b>${escapeHtml(c.name || "Anonymous")}</b>: ${escapeHtml(c.text || "")}
+              ${c.date ? `<span class="cdate">${new Date(c.date.seconds ? c.date.seconds*1000 : c.date).toLocaleString()}</span>` : ""}
+            </div>
+            <button class="commentDel" onclick="deleteEditionComment('${data.id}','${c.cid}')">✕</button>
+          </div>`).join("")}
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function likeEdition(id, btn){
+  if(likedEditions.includes(id)) return;
+  likedEditions.push(id);
+  localStorage.setItem("likedEditions", JSON.stringify(likedEditions));
+  db.collection("archive").doc(id).update({
+    likes: firebase.firestore.FieldValue.increment(1)
+  });
+  btn.classList.add("liked");
+}
+
+function toggleBookmarkEdition(id, btn){
+  const idx = savedEditions.indexOf(id);
+  if(idx === -1){
+    savedEditions.push(id);
+    btn.classList.add("saved");
+    btn.innerHTML = "⭐ Saved";
+  }else{
+    savedEditions.splice(idx, 1);
+    btn.classList.remove("saved");
+    btn.innerHTML = "🔖 Save";
+  }
+  localStorage.setItem("savedEditions", JSON.stringify(savedEditions));
+}
+
+function addEditionComment(id){
+  const nameInput = document.getElementById("ename-"+id);
+  const commentInput = document.getElementById("ecmt-"+id);
+  const name = nameInput.value.trim();
+  const text = commentInput.value.trim();
+  if(!name || !text){ alert("Please enter your name and a comment."); return; }
+  db.collection("archive").doc(id).update({
+    comments: firebase.firestore.FieldValue.arrayUnion({
+      cid: Date.now().toString(36) + Math.random().toString(36).slice(2),
+      name: name,
+      text: text,
+      date: new Date()
+    })
+  });
+  nameInput.value = "";
+  commentInput.value = "";
+}
+
+
+function shareEdition(id){
+  const link = window.location.href.split("#")[0] + "#edition-" + id;
+  if(navigator.share){
+    navigator.share({ title: "USGS TIMES", url: link });
+  }else{
+    navigator.clipboard.writeText(link);
+    alert("Link copied!");
+  }
+}
 </script>
 </body>
 </html>
