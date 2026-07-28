@@ -161,6 +161,7 @@ const auth = firebase.auth();
 
 let editingId = null;
 let allPosts = [];
+let allEditions = [];
 let currentPoints = { bluebells:0, daffodils:0, roses:0, shamrocks:0 };
 
 /* ---------- auth ---------- */
@@ -289,22 +290,48 @@ db.collection("archive").add({
   });
 }
 db.collection("archive").orderBy("created","desc").onSnapshot(snapshot=>{
-  const editions=[];
-  snapshot.forEach(doc=>editions.push({id:doc.id,...doc.data()}));
-  const el=document.getElementById("editionsList");
-  el.innerHTML = editions.length ? editions.map(e=>`
-    <div class="postRow">
-      <div class="meta"><h3>${e.title||"Untitled Edition"}</h3></div>
-      <div class="actions">
-        <button class="btn small" onclick="window.open('${e.pdf}','_blank')">Open</button>
-        <button class="btn small danger" onclick="deleteEdition('${e.id}')">🗑 Delete</button>
-      </div>
-    </div>`).join("") : "<p>No editions uploaded yet.</p>";
+  allEditions = [];
+  snapshot.forEach(doc=>allEditions.push({id:doc.id,...doc.data()}));
+  renderEditionsList();
 });
+
+function renderEditionsList(){
+  const el = document.getElementById("editionsList");
+  if(allEditions.length === 0){ el.innerHTML = "<p>No editions uploaded yet.</p>"; return; }
+  el.innerHTML = allEditions.map(e => `
+    <div class="postRow" style="flex-direction:column;align-items:stretch;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;">
+        <div class="meta">
+          <h3>${e.title||"Untitled Edition"}</h3>
+          <span>❤️ ${e.likes || 0} • 💬 ${(e.comments||[]).length}</span>
+        </div>
+        <div class="actions">
+          <button class="btn small" onclick="window.open('${e.pdf}','_blank')">Open</button>
+          <button class="btn small danger" onclick="deleteEdition('${e.id}')">🗑 Delete</button>
+        </div>
+      </div>
+      ${(e.comments||[]).length ? `
+        <div style="margin-top:10px;padding-left:10px;border-left:3px solid #eee;">
+          ${e.comments.map(c => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;">
+              <span><strong>${c.name}</strong>: ${c.text}</span>
+              <button class="btn small danger" onclick="deleteEditionAdminComment('${e.id}','${c.cid}')">✕</button>
+            </div>`).join("")}
+        </div>` : ""}
+    </div>
+  `).join("");
+}
 function deleteEdition(id){
   if(!confirm("Delete this edition?")) return;
   db.collection("archive").doc(id).delete();
 }
+function deleteEditionAdminComment(editionId, cid){
+  if(!confirm("Delete this comment?")) return;
+  const e = allEditions.find(x => x.id === editionId);
+  const updated = (e.comments || []).filter(c => c.cid !== cid);
+  db.collection("archive").doc(editionId).update({ comments: updated });
+}
+
 /* ---------- house points ---------- */
 db.collection("housepoints").doc("scores").onSnapshot(doc => {
   currentPoints = doc.exists ? doc.data() : { bluebells:0, daffodils:0, roses:0, shamrocks:0 };
