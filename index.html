@@ -705,6 +705,9 @@ function buildArchiveCard(data, editionNumber){
   const comments = data.comments || [];
 
   card.innerHTML = `
+    <div class="pdfPreviewWrap" onclick="openPdfPreview('${data.pdf}')" style="cursor:pointer;border-radius:16px;overflow:hidden;height:260px;background:#eef4ff;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+      <embed src="${data.pdf}#page=1&toolbar=0&navpanes=0&scrollbar=0" type="application/pdf" style="width:100%;height:100%;pointer-events:none;">
+    </div>
     <h3>${escapeHtml(data.title || ("Edition " + editionNumber))}</h3>
     <p>Edition #${editionNumber}</p>
     <a class="downloadBtn" href="${data.pdf}" target="_blank">Open PDF</a>
@@ -743,7 +746,9 @@ function likeEdition(id, btn){
   });
   btn.classList.add("liked");
 }
-
+function openPdfPreview(url){
+  window.open(url, "_blank");
+}
 function toggleBookmarkEdition(id, btn){
   const idx = savedEditions.indexOf(id);
   if(idx === -1){
