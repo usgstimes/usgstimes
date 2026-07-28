@@ -511,21 +511,42 @@ function renderPosts(){
     return;
   }
 
-  let list = currentCategory !== "All"
-    ? allPosts.filter(p => p.category === currentCategory)
-    : allPosts;
+if(currentCategory === "All"){
 
-  if(list.length === 0){
+  // Show articles first
+  allPosts.forEach(p => container.appendChild(buildCard(p)));
+
+  // Then show archive editions
+  allEditions.forEach((e, index) => {
+    const editionNumber = allEditions.length - index;
+    container.appendChild(buildArchiveCard(e, editionNumber));
+  });
+
+  if(allPosts.length === 0 && allEditions.length === 0){
     container.innerHTML = `
       <div class="empty-state">
         <div class="icon">📰</div>
-        <h3>No articles have been published yet.</h3>
+        <h3>No content published yet.</h3>
         <p>Check back soon!</p>
       </div>`;
-    return;
   }
 
-  list.forEach(p => container.appendChild(buildCard(p)));
+  return;
+}
+
+let list = allPosts.filter(p => p.category === currentCategory);
+
+if(list.length === 0){
+  container.innerHTML = `
+    <div class="empty-state">
+      <div class="icon">📰</div>
+      <h3>No articles in this category.</h3>
+      <p>Check back soon!</p>
+    </div>`;
+  return;
+}
+
+list.forEach(p => container.appendChild(buildCard(p)));
 }
 
 function buildCard(p){
@@ -677,7 +698,13 @@ db.collection("archive").orderBy("created", "desc").onSnapshot(snapshot => {
   const container = document.getElementById("archiveContainer");
   container.innerHTML = "";
   allEditions = [];
-  snapshot.forEach(doc => allEditions.push({ id: doc.id, ...doc.data() }));
+
+  snapshot.forEach(doc => {
+    allEditions.push({
+      id: doc.id,
+      ...doc.data()
+    });
+  });
 
   if(allEditions.length === 0){
     container.innerHTML = `
@@ -686,16 +713,24 @@ db.collection("archive").orderBy("created", "desc").onSnapshot(snapshot => {
         <h3>No editions published yet.</h3>
         <p>Check back soon!</p>
       </div>`;
+
+    // Refresh the All page too
+    renderPosts();
     return;
   }
 
-  let i = allEditions.length;
+  let editionNumber = allEditions.length;
+
   allEditions.forEach(data => {
-    container.appendChild(buildArchiveCard(data, i));
-    i--;
+    container.appendChild(buildArchiveCard(data, editionNumber));
+    editionNumber--;
   });
+
+  // Refresh the All page so archive posts appear there too
+  renderPosts();
 });
 
+ 
 function buildArchiveCard(data, editionNumber){
   const card = document.createElement("div");
   card.className = "archive-card";
