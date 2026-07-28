@@ -705,8 +705,22 @@ function buildArchiveCard(data, editionNumber){
 
   card.innerHTML = `
     <div class="pdfPreviewWrap" onclick="openPdfPreview('${data.pdf}')" style="cursor:pointer;border-radius:16px;overflow:hidden;height:260px;background:#eef4ff;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
-      <embed src="${data.pdf}#page=1&toolbar=0&navpanes=0&scrollbar=0" type="application/pdf" style="width:100%;height:100%;pointer-events:none;">
-    </div>
+  ${
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+      ? `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div style="font-size:80px;">📄</div>
+          <div style="margin-top:10px;font-weight:700;color:#dc2626;">PDF</div>
+          <div style="font-size:13px;color:#666;margin-top:4px;">Tap to open</div>
+        </div>
+      `
+      : `
+        <embed src="${data.pdf}#page=1&toolbar=0&navpanes=0&scrollbar=0"
+               type="application/pdf"
+               style="width:100%;height:100%;pointer-events:none;">
+      `
+  }
+</div>
     <h3>${escapeHtml(data.title || ("Edition " + editionNumber))}</h3>
     <p>Edition #${editionNumber}</p>
     <a class="downloadBtn" href="${data.pdf}" target="_blank">Open PDF</a>
