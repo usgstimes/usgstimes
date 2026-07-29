@@ -245,30 +245,18 @@ function renderPostsList(){
       <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;">
         <div class="meta">
           <h3>${p.title || "Untitled"}</h3>
-          <span>${p.category || ""} • ❤️ ${p.likes || 0} • 💬 ${(p.comments||[]).length}</span>
+          <span>${p.category || ""} • ❤️ ${p.likes || 0}</span>
         </div>
         <div class="actions">
           <button class="btn small" onclick="editPost('${p.id}')">✏ Edit</button>
           <button class="btn small danger" onclick="deletePost('${p.id}')">🗑 Delete</button>
         </div>
       </div>
-      ${(p.comments||[]).length ? `
-        <div style="margin-top:10px;padding-left:10px;border-left:3px solid #eee;">
-          ${p.comments.map(c => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;">
-              <span><strong>${c.name}</strong>: ${c.text}</span>
-              <button class="btn small danger" onclick="deleteAdminComment('${p.id}','${c.cid}')">✕</button>
-            </div>`).join("")}
-        </div>` : ""}
+
     </div>
   `).join("");
 }
-function deleteAdminComment(postId, cid){
-  if(!confirm("Delete this comment?")) return;
-  const p = allPosts.find(x => x.id === postId);
-  const updated = (p.comments || []).filter(c => c.cid !== cid);
-  db.collection("posts").doc(postId).update({ comments: updated });
-}
+
 
 /* ---------- archive editions ---------- */
 function uploadEdition(){
@@ -299,33 +287,20 @@ function renderEditionsList(){
       <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;">
         <div class="meta">
           <h3>${e.title||"Untitled Edition"}</h3>
-          <span>❤️ ${e.likes || 0} • 💬 ${(e.comments||[]).length}</span>
+          <span>❤️ ${e.likes || 0}</span>
         </div>
         <div class="actions">
           <button class="btn small" onclick="window.open('${e.pdf}','_blank')">Open</button>
           <button class="btn small danger" onclick="deleteEdition('${e.id}')">🗑 Delete</button>
         </div>
       </div>
-      ${(e.comments||[]).length ? `
-        <div style="margin-top:10px;padding-left:10px;border-left:3px solid #eee;">
-          ${e.comments.map(c => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;">
-              <span><strong>${c.name}</strong>: ${c.text}</span>
-              <button class="btn small danger" onclick="deleteEditionAdminComment('${e.id}','${c.cid}')">✕</button>
-            </div>`).join("")}
-        </div>` : ""}
+
     </div>
   `).join("");
 }
 function deleteEdition(id){
   if(!confirm("Delete this edition?")) return;
   db.collection("archive").doc(id).delete();
-}
-function deleteEditionAdminComment(editionId, cid){
-  if(!confirm("Delete this comment?")) return;
-  const e = allEditions.find(x => x.id === editionId);
-  const updated = (e.comments || []).filter(c => c.cid !== cid);
-  db.collection("archive").doc(editionId).update({ comments: updated });
 }
 
 /* ---------- house points ---------- */
