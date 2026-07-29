@@ -56,7 +56,7 @@ border-radius:28px;box-shadow:0 15px 45px rgba(0,0,0,.08);z-index:9999;transitio
 .dropdown-menu a{display:block;padding:10px;}
 
 @media(max-width:900px){
-#menuBtn{display:flex;}
+
 .nav-links{position:fixed;top:90px;right:-100%;width:280px;background:white;padding:30px;border-radius:20px;flex-direction:column;transition:.5s;}
 .nav-links.show{right:20px;}
 }
@@ -99,16 +99,7 @@ border-radius:28px;box-shadow:0 15px 45px rgba(0,0,0,.08);z-index:9999;transitio
 .post-actions button:hover{background:#2563eb;color:white;transform:translateY(-3px);}
 .post-actions button.liked{background:#2563eb;color:white;}
 .post-actions button.saved{background:#f59e0b;color:white;}
-.comments{margin-top:16px;}
-.comment{background:#f6f8ff;padding:10px 14px;border-radius:12px;margin-top:8px;font-size:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-.comment b{color:#2563eb;}
-.comment .cdate{color:#999;font-size:11px;display:block;margin-top:2px;}
-.comment .commentDel{background:#dc2626;color:white;border:none;border-radius:8px;padding:4px 9px;font-size:11px;cursor:pointer;flex-shrink:0;}
-.commentRow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
-.commentName,.commentInput{padding:10px 14px;border-radius:15px;border:1px solid #ddd;font-size:14px;}
-.commentName{flex:1;min-width:110px;}
-.commentInput{flex:2;min-width:150px;}
-.sendComment{padding:10px 18px;border:none;border-radius:20px;background:#2563eb;color:white;cursor:pointer;font-weight:600;}
+
 .empty-state{text-align:center;padding:80px 20px;grid-column:1/-1;}
 .empty-state .icon{font-size:70px;margin-bottom:15px;}
 .empty-state h3{font-size:24px;margin-bottom:8px;}
@@ -181,9 +172,7 @@ body.dark .post-actions button:hover{background:#2563eb;color:white;}
 body.dark .post-actions button.liked{background:#2563eb;color:white;}
 body.dark .post-actions button.saved{background:#f59e0b;color:white;}
 body.dark #categoryFilter{background:#334155;color:#f8fafc;}
-body.dark .comment{background:#1e293b;color:#e2e8f0;}
-body.dark .comment .commentDel{color:white;}
-body.dark .commentName,body.dark .commentInput{background:#1e293b;color:white;border-color:#334155;}
+
 body.dark .dropdown-menu{background:#1e293b;}
 body.dark .dropdown-menu a{color:#f1f5f9;}
 body.dark .category-card a{color:#60a5fa;}
@@ -244,7 +233,7 @@ html,body{overflow-x:hidden;width:100%;}
 
 <nav class="nav">
   <div class="logo"><img src="logo.png" alt=""><span>USGS TIMES</span></div>
-  <div id="menuBtn" class="circle-btn">☰</div>
+ 
   <div class="nav-links" id="navLinks">
 <a onclick="filterCategory('All')">All</a>
     <a onclick="showPage('page-archive')">Archive</a>
@@ -402,9 +391,7 @@ window.addEventListener("mousemove",(e)=>{
   document.querySelectorAll(".blob").forEach((blob,i)=>{blob.style.transform=`translate(${x*(i+1)}px,${y*(i+1)}px)`;});
 });
 
-const menuBtn=document.getElementById("menuBtn");
-const navLinks=document.getElementById("navLinks");
-menuBtn.onclick=()=>navLinks.classList.toggle("show");
+
 
 const particleContainer=document.getElementById("particles");
 for(let i=0;i<60;i++){
@@ -572,7 +559,7 @@ function buildCard(p){
 
   const liked = likedIds.includes(p.id);
   const saved = savedIds.includes(p.id);
-  const comments = p.comments || [];
+  
 card.innerHTML = `
   ${p.image ? `<img src="${p.image}" onclick="openImage('${p.image}')">` : ""}
   <div class="article-body">
@@ -585,22 +572,7 @@ card.innerHTML = `
       <button class="bookmarkBtn ${saved ? "saved" : ""}" onclick="toggleBookmark('${p.id}', this)">${saved ? "⭐ Saved" : "🔖 Save"}</button>
       <button onclick="sharePost('${p.id}')">🔗 Share</button>
     </div>
-    <div class="comments">
-      <div class="commentRow">
-        <input class="commentName" placeholder="Your name" id="name-${p.id}">
-        <input class="commentInput" placeholder="Write a comment" id="cmt-${p.id}">
-        <button class="sendComment" onclick="addComment('${p.id}')">Post</button>
-      </div>
-      <div class="commentList" id="clist-${p.id}">
-${comments.slice().reverse().map(c => `
-        <div class="comment">
-          <div>
-            <b>${escapeHtml(c.name || "Anonymous")}</b>: ${escapeHtml(c.text || "")}
-            ${c.date ? `<span class="cdate">${new Date(c.date.seconds ? c.date.seconds*1000 : c.date).toLocaleString()}</span>` : ""}
-          </div>
-        </div>`).join("")}
-      </div>
-    </div>
+
   </div>
 `;
   return card;
@@ -640,30 +612,7 @@ function toggleBookmark(id, btn){
 }
 
 /* ---------- comments (name + text + date, stored in Firestore) ---------- */
-function addComment(id){
-  const nameInput = document.getElementById("name-"+id);
-  const commentInput = document.getElementById("cmt-"+id);
-  const name = nameInput.value.trim();
-  const text = commentInput.value.trim();
-  if(!name || !text){
-    alert("Please enter your name and a comment.");
-    return;
-  }
-db.collection("posts").doc(id).update({
-  comments: firebase.firestore.FieldValue.arrayUnion({
-    cid: Date.now().toString(36) + Math.random().toString(36).slice(2),
-    name: name,
-    text: text,
-    date: new Date()
-  })
-}).then(() => {
-  nameInput.value = "";
-  commentInput.value = "";
-}).catch(err => {
-  alert("Couldn't post comment: " + err.message);
-  console.error(err);
-});
-}
+
 /* ---------- share ---------- */
 function sharePost(id){
   const link = window.location.href.split("#")[0] + "#post-" + id;
@@ -748,7 +697,7 @@ function buildArchiveCard(data, editionNumber){
   card.className = "archive-card";
   const liked = likedEditions.includes(data.id);
   const saved = savedEditions.includes(data.id);
-  const comments = data.comments || [];
+
 
   card.innerHTML = `
     <div class="pdfPreviewWrap" onclick="openPdfPreview('${data.pdf}')" style="cursor:pointer;border-radius:16px;overflow:hidden;height:260px;background:#eef4ff;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
@@ -776,23 +725,7 @@ function buildArchiveCard(data, editionNumber){
       <button class="bookmarkBtn ${saved ? "saved" : ""}" onclick="toggleBookmarkEdition('${data.id}', this)">${saved ? "⭐ Saved" : "🔖 Save"}</button>
       <button onclick="shareEdition('${data.id}')">🔗 Share</button>
     </div>
-    <div class="comments">
-      <div class="commentRow">
-        <input class="commentName" placeholder="Your name" id="ename-${data.id}">
-        <input class="commentInput" placeholder="Write a comment" id="ecmt-${data.id}">
-        <button class="sendComment" onclick="addEditionComment('${data.id}')">Post</button>
-      </div>
-      <div class="commentList" id="eclist-${data.id}">
-      ${comments.slice().reverse().map(c => `
-          <div class="comment">
-            <div>
-              <b>${escapeHtml(c.name || "Anonymous")}</b>: ${escapeHtml(c.text || "")}
-              ${c.date ? `<span class="cdate">${new Date(c.date.seconds ? c.date.seconds*1000 : c.date).toLocaleString()}</span>` : ""}
-            </div>
-            <button class="commentDel" onclick="deleteEditionComment('${data.id}','${c.cid}')">✕</button>
-          </div>`).join("")}
-      </div>
-    </div>
+
   `;
   return card;
 }
@@ -823,23 +756,7 @@ function toggleBookmarkEdition(id, btn){
   localStorage.setItem("savedEditions", JSON.stringify(savedEditions));
 }
 
-function addEditionComment(id){
-  const nameInput = document.getElementById("ename-"+id);
-  const commentInput = document.getElementById("ecmt-"+id);
-  const name = nameInput.value.trim();
-  const text = commentInput.value.trim();
-  if(!name || !text){ alert("Please enter your name and a comment."); return; }
-  db.collection("archive").doc(id).update({
-    comments: firebase.firestore.FieldValue.arrayUnion({
-      cid: Date.now().toString(36) + Math.random().toString(36).slice(2),
-      name: name,
-      text: text,
-      date: new Date()
-    })
-  });
-  nameInput.value = "";
-  commentInput.value = "";
-}
+
 
 
 function shareEdition(id){
