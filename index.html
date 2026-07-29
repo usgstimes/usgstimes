@@ -129,8 +129,8 @@ border-radius:28px;box-shadow:0 15px 45px rgba(0,0,0,.08);z-index:9999;transitio
 .newsletter-box{background:linear-gradient(135deg,#2563eb,#46b5ff);padding:70px;border-radius:35px;text-align:center;color:white;box-shadow:0 35px 70px rgba(37,99,235,.25);}
 .newsletter-box h2{font-size:42px;margin-bottom:16px;}
 .newsletter-box h3{font-size:22px;margin-top:20px;}
-.newsletter-box p{font-size:18px;opacity:.95;max-width:700px;margin:14px auto;}
-.newsletter-box b{font-size:20px;}
+.newsletter-box p{font-size:18px;opacity:.95;max-width:700px;margin:14px auto;word-break:break-word;overflow-wrap:break-word;}
+.newsletter-box b{font-size:20px;word-break:break-word;overflow-wrap:break-word;}
 
 .footer{padding:70px 8%;background:#0f172a;color:white;text-align:center;}
 .footer-logo{font-size:30px;font-weight:800;margin-bottom:20px;}
@@ -175,6 +175,7 @@ body.dark .article-card,body.dark .category-card,body.dark .archive-card,body.da
 body.dark p{color:#d1d5db;}
 body.dark .footer{background:#020617;}
 body.dark .nav-links a{color:#f1f5f9;}
+body.dark .circle-btn{color:#0f172a;}
 body.dark .post-actions button{background:#334155;color:#f8fafc;}
 body.dark .post-actions button:hover{background:#2563eb;color:white;}
 body.dark .post-actions button.liked{background:#2563eb;color:white;}
@@ -216,6 +217,22 @@ body.dark .leaderboard tr{
 .newsletter-box{padding:45px 22px;}
 .newsletter-box h2{font-size:32px;}
 }
+
+@media(max-width:600px){
+html,body{overflow-x:hidden;width:100%;}
+.nav{padding:0 14px;height:64px;gap:6px;}
+.logo{font-size:17px;gap:6px;}
+.logo img{width:26px;height:26px;}
+.nav-icons{gap:6px;}
+#categoryFilter{padding:6px 8px;font-size:11px;max-width:90px;}
+.circle-btn{width:36px;height:36px;font-size:15px;}
+.cover-title{font-size:42px;letter-spacing:1px;}
+.cover-subtitle{font-size:16px;padding:0 20px;}
+.cover-logo{width:100px;height:100px;}
+.cover-logo img{width:65px;}
+.houses-grid{grid-template-columns:1fr;}
+.house{padding:35px 25px;}
+}
 </style>
 </head>
 <body>
@@ -229,18 +246,14 @@ body.dark .leaderboard tr{
   <div class="logo"><img src="logo.png" alt=""><span>USGS TIMES</span></div>
   <div id="menuBtn" class="circle-btn">☰</div>
   <div class="nav-links" id="navLinks">
-    <a onclick="filterCategory('All')">All</a>
-    <a onclick="filterCategory('Events')">Events</a>
+<a onclick="filterCategory('All')">All</a>
+    <a onclick="showPage('page-archive')">Archive</a>
     <div class="dropdown">
       <a>Boundless Imagination ▾</a>
       <div class="dropdown-menu">
-        <a onclick="filterCategory('Stories')">Stories</a>
         <a onclick="filterCategory('Poetry')">Poetry</a>
-        <a onclick="filterCategory('Reviews')">Reviews</a>
       </div>
     </div>
-    
-    <a onclick="showPage('page-archive')">Archive</a>
     <a onclick="showPage('page-houses')">Houses</a>
     <a onclick="showPage('page-leaderboard')">Leaderboard</a>
     <a onclick="showBookmarks()">🔖 Saved</a>
@@ -249,11 +262,11 @@ body.dark .leaderboard tr{
   <div class="nav-icons">
 <select id="categoryFilter" onchange="handleCategorySelect(this.value)">
   <option value="All">All</option>
-  <option value="Events">Events</option>
-  <option value="Stories">Stories</option>
-  <option value="Poetry">Poetry</option>
-  <option value="Reviews">Reviews</option>
   <option value="Archive">Archive</option>
+  <option value="Poetry">Poetry</option>
+  <option value="Houses">Houses</option>
+  <option value="Leaderboard">Leaderboard</option>
+  <option value="Contact">Contact</option>
 </select>
     <div class="circle-btn" id="themeBtn">🌙</div>
   </div>
@@ -281,10 +294,10 @@ body.dark .leaderboard tr{
 
   <section class="categories" id="categories">
     <div class="section-title"><h2>Explore Categories</h2><p>Browse stories from every corner of USGS.</p></div>
-    <div class="category-grid">
-      <div class="category-card" onclick="filterCategory('Events')"><div class="category-icon">🎉</div><h3>Events</h3><p>School events, celebrations, competitions and special assemblies.</p><a>Explore →</a></div>
-      <div class="category-card" onclick="filterCategory('Stories')"><div class="category-icon">📖</div><h3>Boundless Imagination</h3><p>Stories, poems, reviews and creative student writing.</p><a>Explore →</a></div>
-      <div class="category-card" onclick="showPage('page-archive')"><div class="category-icon">🗞️</div><h3>Newspaper Archive</h3><p>Browse every edition of USGS Times and revisit previous newspapers.</p><a>Explore →</a> </div></div>
+<div class="category-grid">
+      <div class="category-card" onclick="showPage('page-archive')"><div class="category-icon">🗞️</div><h3>Newspaper Archive</h3><p>Browse every edition of USGS Times and revisit previous newspapers.</p><a>Explore →</a></div>
+      <div class="category-card" onclick="filterCategory('Poetry')"><div class="category-icon">📖</div><h3>Boundless Imagination</h3><p>Poems and creative student writing.</p><a>Explore →</a></div>
+      <div class="category-card" onclick="showPage('page-houses')"><div class="category-icon">🏠</div><h3>Houses</h3><p>Meet the four houses and see what makes each one shine.</p><a>Explore →</a></div>
     </div>
   </section>
 </div>
@@ -472,10 +485,10 @@ function filterCategory(category){
   renderPosts();
 }
 function handleCategorySelect(value){
-  if(value === "Archive"){
-    showPage('page-archive');
-    return;
-  }
+  if(value === "Archive"){ showPage('page-archive'); return; }
+  if(value === "Houses"){ showPage('page-houses'); return; }
+  if(value === "Leaderboard"){ showPage('page-leaderboard'); return; }
+  if(value === "Contact"){ showPage('page-contact'); return; }
   filterCategory(value);
 }
 function showBookmarks(){
@@ -503,25 +516,24 @@ function renderPosts(){
       return;
     }
 
-    savedPosts.forEach(p => container.appendChild(buildCard(p)));
-    savedEditionsList.forEach((e, idx) => {
+savedEditionsList.forEach((e, idx) => {
       const editionNumber = allEditions.length - allEditions.indexOf(e);
       container.appendChild(buildArchiveCard(e, editionNumber));
     });
+    savedPosts.forEach(p => container.appendChild(buildCard(p)));
     return;
   }
 
 if(currentCategory === "All"){
 
-  // Show articles first
-  allPosts.forEach(p => container.appendChild(buildCard(p)));
-
-  // Then show archive editions
+  // Show archive editions first
   allEditions.forEach((e, index) => {
     const editionNumber = allEditions.length - index;
     container.appendChild(buildArchiveCard(e, editionNumber));
   });
 
+  // Then show articles (Boundless Imagination)
+  allPosts.forEach(p => container.appendChild(buildCard(p)));
   if(allPosts.length === 0 && allEditions.length === 0){
     container.innerHTML = `
       <div class="empty-state">
