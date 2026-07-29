@@ -41,6 +41,10 @@ label{font-weight:600;font-size:14px;color:#555;display:block;margin-top:14px;}
 .blue{background:#2563eb;}.yellow{background:#eab308;}.red{background:#dc2626;}.green{background:#16a34a;}
 
 .editingBanner{background:#fff7e6;border:1px solid #f59e0b;padding:10px 16px;border-radius:12px;margin-bottom:14px;font-size:14px;}
+
+.statusTag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-left:8px;vertical-align:middle;}
+.statusTag.approved{background:#dcfce7;color:#16a34a;}
+.statusTag.pending{background:#fef9c3;color:#a16207;}
 </style>
 </head>
 <body>
@@ -81,6 +85,17 @@ label{font-weight:600;font-size:14px;color:#555;display:block;margin-top:14px;}
     <div class="card">
       <h2>Published Posts</h2>
       <div id="postsList">Loading…</div>
+    </div>
+
+    <div class="card">
+      <h2>Pending Comments</h2>
+      <div id="pendingCommentsList">Loading…</div>
+    </div>
+
+    <div class="card">
+      <h2>All Comments</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:10px;">Every comment across posts and archive editions — delete anything, approved or pending.</p>
+      <div id="allCommentsList">Loading…</div>
     </div>
 
     <div class="card">
@@ -235,6 +250,8 @@ db.collection("posts").orderBy("created", "desc").onSnapshot(snapshot => {
   allPosts = [];
   snapshot.forEach(doc => allPosts.push({ id: doc.id, ...doc.data() }));
   renderPostsList();
+  renderPendingComments();
+  renderAllComments();
 });
 
 function renderPostsList(){
@@ -257,6 +274,82 @@ function renderPostsList(){
   `).join("");
 }
 
+/* ---------- pending comments (awaiting approval) ---------- */
+function renderPendingComments(){
+  const el = document.getElementById("pendingCommentsList");
+  const pendingFromPosts = [];
+  allPosts.forEach(p => {
+    (p.comments || []).forEach(c => {
+      if(c.status === "pending") pendingFromPosts.push({ parentId: p.id, parentTitle: p.title || "Untitled", type: "posts", comment: c });
+    });
+  });
+  const pendingFromEditions = [];
+  allEditions.forEach(e => {
+    (e.comments || []).forEach(c => {
+      if(c.status === "pending") pendingFromEditions.push({ parentId: e.id, parentTitle: e.title || "Untitled Edition", type: "archive", comment: c });
+    });
+  });
+  const all = [...pendingFromPosts, ...pendingFromEditions];
+
+  if(all.length === 0){ el.innerHTML = "<p>No comments awaiting review.</p>"; return; }
+
+  el.innerHTML = all.map(item => `
+    <div class="postRow">
+      <div class="meta">
+        <h3>${escapeHtml(item.comment.name)}</h3>
+        <span>on "${escapeHtml(item.parentTitle)}" • ${escapeHtml(item.comment.text)}</span>
+      </div>
+      <div class="actions">
+        <button class="btn small" onclick="moderateComment('${item.type}','${item.parentId}','${item.comment.cid}','approved')">✅ Approve</button>
+        <button class="btn small danger" onclick="moderateComment('${item.type}','${item.parentId}','${item.comment.cid}','rejected')">❌ Reject</button>
+        <button class="btn small danger" onclick="deleteComment('${item.type}','${item.parentId}','${item.comment.cid}')">🗑 Delete</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ---------- all comments (approved + pending), delete any of them ---------- */
+function renderAllComments(){
+  const el = document.getElementById("allCommentsList");
+  const items = [];
+  allPosts.forEach(p => {
+    (p.comments || []).forEach(c => {
+      items.push({ parentId: p.id, parentTitle: p.title || "Untitled", type: "posts", comment: c });
+    });
+  });
+  allEditions.forEach(e => {
+    (e.comments || []).forEach(c => {
+      items.push({ parentId: e.id, parentTitle: e.title || "Untitled Edition", type: "archive", comment: c });
+    });
+  });
+
+  if(items.length === 0){ el.innerHTML = "<p>No comments yet.</p>"; return; }
+
+  // newest first
+  items.sort((a,b) => {
+    const ta = a.comment.date && a.comment.date.seconds ? a.comment.date.seconds : 0;
+    const tb = b.comment.date && b.comment.date.seconds ? b.comment.date.seconds : 0;
+    return tb - ta;
+  });
+
+  el.innerHTML = items.map(item => `
+    <div class="postRow">
+      <div class="meta">
+        <h3>${escapeHtml(item.comment.name)}<span class="statusTag ${item.comment.status === 'approved' ? 'approved' : 'pending'}">${item.comment.status}</span></h3>
+        <span>on "${escapeHtml(item.parentTitle)}" (${item.type === 'posts' ? 'Post' : 'Archive'}) • ${escapeHtml(item.comment.text)}</span>
+      </div>
+      <div class="actions">
+        <button class="btn small danger" onclick="deleteComment('${item.type}','${item.parentId}','${item.comment.cid}')">🗑 Delete</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function escapeHtml(str){
+  const d = document.createElement("div");
+  d.innerText = str == null ? "" : str;
+  return d.innerHTML;
+}
 
 /* ---------- archive editions ---------- */
 function uploadEdition(){
@@ -277,6 +370,8 @@ db.collection("archive").orderBy("created","desc").onSnapshot(snapshot=>{
   allEditions = [];
   snapshot.forEach(doc=>allEditions.push({id:doc.id,...doc.data()}));
   renderEditionsList();
+  renderPendingComments();
+  renderAllComments();
 });
 
 function renderEditionsList(){
@@ -301,6 +396,32 @@ function renderEditionsList(){
 function deleteEdition(id){
   if(!confirm("Delete this edition?")) return;
   db.collection("archive").doc(id).delete();
+}
+
+/* ---------- comment moderation actions ---------- */
+function moderateComment(type, parentId, cid, decision){
+  const source = type === "posts" ? allPosts : allEditions;
+  const parent = source.find(x => x.id === parentId);
+  if(!parent) return;
+
+  let updated;
+  if(decision === "approved"){
+    updated = (parent.comments || []).map(c => c.cid === cid ? { ...c, status: "approved" } : c);
+  }else{
+    updated = (parent.comments || []).filter(c => c.cid !== cid);
+  }
+
+  db.collection(type).doc(parentId).update({ comments: updated });
+}
+
+/* Delete any comment (approved or pending) from either posts or archive editions */
+function deleteComment(type, parentId, cid){
+  if(!confirm("Delete this comment? This cannot be undone.")) return;
+  const source = type === "posts" ? allPosts : allEditions;
+  const parent = source.find(x => x.id === parentId);
+  if(!parent) return;
+  const updated = (parent.comments || []).filter(c => c.cid !== cid);
+  db.collection(type).doc(parentId).update({ comments: updated });
 }
 
 /* ---------- house points ---------- */
